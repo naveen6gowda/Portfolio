@@ -68,4 +68,4 @@ OPNsense Firewall / Router
 
 ---
 
-*This infrastructure was designed and deployed with AI assistance (Claude by Anthropic).*
+*This infrastructure was designed and deployed with AI assistance.*

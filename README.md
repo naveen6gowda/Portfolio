@@ -5,7 +5,8 @@
 This repository showcases hands-on work across **AI / LLM application development (LangChain, LangGraph, AI agents)**, **local AI infrastructure**, and **embedded / home-automation projects** built with real hardware and deployed in a production home environment. Every project here runs 24/7 and was designed, debugged, and refined through real-world use.
 
 **Related repositories:**
-- [`ai/`](./ai/) — LangChain / LangGraph chains, tool-use agents, and a homelab SRE agent (in this repo)
+- [`python-for-ai`](https://github.com/naveen6gowda/python-for-ai) — **HomelabSentinel**, my agentic-AI homelab SRE (LangGraph + human-approval gate) — full source
+- [`ai/`](./ai/) — LangChain / LangGraph chains, tool-use agents, and structured-output examples (in this repo)
 - [KiCad-projects](https://github.com/naveen6gowda/KiCad-projects) — PCB designs (CM5 carrier, relay controller)
 
 ---
@@ -45,16 +46,45 @@ I am an embedded systems engineer with strong hands-on interest in **AI / LLMs**
 
 ## 1. LangChain & LangGraph AI Agents
 
-**Directory:** [`ai/`](./ai/)
+**Directory:** [`ai/`](./ai/)  ·  **Flagship repo:** [`python-for-ai ↗`](https://github.com/naveen6gowda/python-for-ai)
 
-Hands-on Python work building LLM applications end-to-end — from simple chains to graph-based, tool-using agents. Code, examples, and a homelab SRE agent live in [`ai/`](./ai/).
+Hands-on Python work building LLM applications end-to-end — from the simplest
+"prompt → model → parser" chain to a graph-based, tool-using agent that runs my
+homelab in production.
 
-**Highlights:**
+### 🛰️ Featured — HomelabSentinel: an agentic-AI SRE
+
+An autonomous Site-Reliability agent that watches **Proxmox + Home Assistant +
+Docker**, reasons about what's wrong with an LLM, and **asks my permission on
+Telegram before it changes anything.** It runs 24/7 on an unprivileged LXC and
+answers over **Telegram and Alexa**.
+
+```mermaid
+flowchart LR
+    U["📱 Telegram / 🗣️ Alexa"] --> B["🧠 LangGraph agent · Claude"]
+    B -->|"interrupt() gate"| H["🙋 Approve / Deny"]
+    B --> T["🧰 Tools"]
+    T --> P["Proxmox · Home Assistant · Portainer"]
+    T --> G["🏠 local Gemma · summaries · $0"]
+```
+
+- 🛡️ **Human-in-the-loop safety** — a LangGraph `interrupt()` gate pauses every
+  destructive action for my tap (default-deny), backed by 8 layers of defense in depth.
+- 📈 **Built as a 5-step course** — `agent_v1` (raw ReAct loop, zero frameworks) →
+  `agent_v5` (approval gate + SQLite checkpointer + token economy).
+- 🧠 **Two-brain cost design** — cloud **Claude** reasons; a **local Gemma**
+  (llama.cpp) summarizes, so the 5 scheduled monitors and ~95% of voice commands cost **$0**.
+- 🔌 **Production surface** — Telegram bot, Alexa voice bridge, BM25 RAG over my
+  runbooks, and 5 systemd monitor timers.
+
+👉 **Full source, architecture & diagrams:** **[github.com/naveen6gowda/python-for-ai ↗](https://github.com/naveen6gowda/python-for-ai)**
+
+### Foundations — single concepts, runnable in isolation ([`ai/`](./ai/))
+
 - **LangChain Expression Language (LCEL)** — prompt → model → output-parser chains
 - **Structured output with Pydantic** — typed, validated LLM responses (ratings, enums, nested models)
 - **Tool use with the Anthropic SDK** — raw multi-turn tool-calling loop against `claude-sonnet-4-6`
 - **LangGraph (prebuilt + custom)** — `create_react_agent` and a hand-built `StateGraph` with `ToolNode`/`tools_condition`
-- **HomelabSentinel agent** — an autonomous SRE agent that inspects Proxmox LXC/VM state and Home Assistant entities through tools, decides if a restart is needed, and sends Telegram alerts
 - **Real-data analytics** — Open-Meteo weather pull → pandas DataFrame → matplotlib chart
 
 **Stack:** Python · LangChain · LangGraph · Anthropic SDK · Pydantic · `python-dotenv` · pandas · matplotlib · **llama.cpp + Hermes Agent (current local target)** · Ollama + OpenClaw (earlier setup) · OpenAI Codex (GPT-5.5) for day-to-day coding
@@ -357,7 +387,7 @@ A low-power e-ink display node showing Home Assistant data. E-paper retains the 
 | Skill | Evidence |
 |-------|----------|
 | **LLM application development** | LangChain & LangGraph chains, structured output, LCEL, ReAct agents — see [`ai/`](./ai/) |
-| **AI-agent architectures** | HomelabSentinel: multi-turn tool-using agent over Proxmox + Home Assistant — see [`ai/Agent_AI/`](./ai/Agent_AI/) |
+| **AI-agent architectures** | **HomelabSentinel** — LangGraph agent (v1→v5) with a human-in-the-loop `interrupt()` approval gate over Proxmox + HA + Docker — [showcase](./ai/Agent_AI/) · [full code ↗](https://github.com/naveen6gowda/python-for-ai) |
 | **Structured LLM output** | Pydantic-typed responses, validation, enum constraints — see [`ai/structure_io.py`](./ai/structure_io.py) |
 | **Local AI infrastructure** | **llama.cpp + Hermes Agent** (current, GPT-5.5), Ollama + OpenClaw (earlier), iGPU passthrough, Open WebUI, model management on Proxmox homelab |
 | **AI coding workflow** | **OpenAI Codex (GPT-5.5)** as the day-to-day coding agent for this repo and the Hermes work |
@@ -399,7 +429,7 @@ homelab-projects/
 │   ├── Langraph_prebuilt.py         ← LangGraph create_react_agent
 │   ├── custom_langraph.py           ← Hand-built LangGraph StateGraph
 │   ├── get_data.py                  ← Open-Meteo weather → pandas
-│   └── Agent_AI/                    ← HomelabSentinel SRE agent (Proxmox + HA + Telegram tools)
+│   └── Agent_AI/                    ← HomelabSentinel showcase — full code → github.com/naveen6gowda/python-for-ai
 ├── docker/                          ← Docker Compose stack (26 containers, secrets removed)
 │   ├── README.md
 │   └── docker-compose.yml
@@ -419,4 +449,4 @@ homelab-projects/
 
 *All projects in this repository are real, deployed, and actively maintained. ESPHome YAML files have WiFi credentials and API keys replaced with placeholders — use a `secrets.yaml` file in production.*
 
-*This portfolio — including the homelab infrastructure setup, PCB modifications, and ESPHome firmware — was developed with the assistance of AI (Claude by Anthropic). The designs, decisions, and deployments are mine; AI helped accelerate the process.*
+*This portfolio — including the homelab infrastructure setup, PCB modifications, and ESPHome firmware — was developed with AI assistance. The designs, decisions, and deployments are mine; AI helped accelerate the process.*

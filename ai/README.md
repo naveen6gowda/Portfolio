@@ -63,34 +63,23 @@ Each file is a self-contained, runnable example.
 | [`get_data.py`](./get_data.py) | Pulls a week of weather data from the **Open-Meteo API**, loads it into a pandas DataFrame, and writes a clean CSV (`data/Erdweg_weather.csv`). Used as the data source for downstream charting / analysis. |
 | [`hello.py`](./hello.py) · [`IPL.py`](./IPL.py) | Small Python warm-up scripts |
 
-### `Agent_AI/` — the production-style agent
+### 🛰️ `Agent_AI/` — HomelabSentinel (flagship)
 
-A standalone, **`uv`-packaged** project with its own `pyproject.toml`. This is the centerpiece of this folder.
+What began as a raw, framework-free tool-loop here grew into **HomelabSentinel**,
+a production agentic-AI SRE that now runs my homelab 24/7. The complete project —
+a five-step agent course (`agent_v1` raw loop → `agent_v5` with a human-approval
+gate), two-brain (Claude + local Gemma) cost design, a Telegram bot, an Alexa
+voice bridge, BM25 RAG, and five scheduled monitors — lives in its own repository:
 
-**[`Agent_AI/agent_v1_raw.py`](./Agent_AI/agent_v1_raw.py) — HomelabSentinel**
+> ### → **[github.com/naveen6gowda/python-for-ai ↗](https://github.com/naveen6gowda/python-for-ai)**
 
-A multi-turn, tool-using agent that acts as an **SRE for my homelab**. It is given a natural-language question ("Check on the openclaw container and mqtt broker. Fix anything broken."), and then:
+See the **[showcase with architecture diagrams](./Agent_AI/README.md)** for the full tour.
 
-1. **Plans** — decides which tool to call.
-2. **Acts** — calls one of four real tools (currently stubbed for safety):
-   - `check_proxmox_status(node, vmid)` — get LXC/VM status, memory %, uptime
-   - `get_ha_entity(entity_id)` — read a Home Assistant entity state
-   - `restart_lxc(node, vmid)` — destructive action, gated by reasoning
-   - `send_telegram_alert(message)` — notify the operator
-3. **Observes** — feeds the `tool_result` back into the model.
-4. **Iterates** — up to 10 turns until `stop_reason == "end_turn"`.
-
-**Why this matters:**
-- It uses the **raw Anthropic Messages API** — no framework hiding the control loop. Every `tool_use` block, `tool_result` injection, and `stop_reason` check is explicit.
-- The **system prompt encodes operational policy**: "always check status before restarting", "if mem_pct > 85, alert before restart", "if stopped, restart **and** alert". This is how you make an agent behave like an on-call engineer rather than a random LLM.
-- **Destructive tools are isolated** (`restart_lxc`) and require the agent to reason its way to them — they're not the default action.
-- The tool layer is **stubbed but realistic** — same function signatures and return shapes as the real Proxmox / HA / Telegram APIs, so swapping to live calls is a drop-in change.
-
-**Files:**
-- [`agent_v1_raw.py`](./Agent_AI/agent_v1_raw.py) — the agent loop and system prompt
-- [`tools.py`](./Agent_AI/tools.py) — tool implementations (stubbed; matches real API shapes)
-- [`pyproject.toml`](./Agent_AI/pyproject.toml) — `uv`-managed dependencies (anthropic, fastapi, httpx, langchain-anthropic, langgraph, pydantic, uvicorn) — ready to expose as an HTTP service
-- [`main.py`](./Agent_AI/main.py) — entry point
+**Highlights:**
+- **Human-in-the-loop safety** — a LangGraph `interrupt()` gate pauses every destructive action for my approval (default-deny), backed by 8 layers of defense in depth.
+- **Cost-aware multi-model routing** — cloud Claude reasons, local Gemma summarizes; the scheduled monitors and ~95% of voice commands cost **$0** and run offline.
+- **Durable** — a SQLite checkpointer survives a process restart *mid-approval*.
+- **Real integrations, not stubs** — live Proxmox API, Home Assistant, and Portainer, with the QEMU page-cache memory trap handled correctly before any restart.
 
 ---
 
@@ -110,10 +99,8 @@ python tools.py
 python Langraph_prebuilt.py
 python custom_langraph.py
 
-# 4. Run the homelab agent (uv-packaged)
-cd Agent_AI
-uv sync
-uv run agent_v1_raw.py
+# 4. The full homelab agent (HomelabSentinel) lives in its own repo:
+#    https://github.com/naveen6gowda/python-for-ai
 ```
 
 For local inference (no API key, fully offline), point any of these scripts at the **inference LXC** described in [`ollama-lxc-setup.md`](./ollama-lxc-setup.md). Current target is **llama.cpp's `llama-server`** on `:8080`; the earlier **Ollama** endpoint on `:11434` still works the same way. `claude-sonnet-4-6` can be swapped for `qwen2.5:3b` / `llama3.2:3b` via `ChatOllama`, or for any local GGUF by pointing `ChatOpenAI(base_url=...)` at the llama-server endpoint.
@@ -126,27 +113,30 @@ For local inference (no API key, fully offline), point any of these scripts at t
 |-----------|---------------|
 | **LangChain LCEL chains** | [`LCEL.py`](./LCEL.py) |
 | **Structured output with Pydantic** | [`structure_io.py`](./structure_io.py), [`structured.py`](./structured.py) |
-| **Tool-use loop (raw Anthropic SDK)** | [`tools.py`](./tools.py), [`Agent_AI/agent_v1_raw.py`](./Agent_AI/agent_v1_raw.py) |
+| **Tool-use loop (raw Anthropic SDK)** | [`tools.py`](./tools.py) · [HomelabSentinel `agent_v1_raw.py` ↗](https://github.com/naveen6gowda/python-for-ai/blob/main/Agent_AI/agent_v1_raw.py) |
 | **LangGraph — prebuilt ReAct agent** | [`Langraph_prebuilt.py`](./Langraph_prebuilt.py) |
 | **LangGraph — hand-built `StateGraph`** | [`custom_langraph.py`](./custom_langraph.py) |
-| **Multi-turn agent with operational policy** | [`Agent_AI/agent_v1_raw.py`](./Agent_AI/agent_v1_raw.py) |
-| **Real API integration in agent tools** | [`tools.py`](./tools.py) (Open-Meteo), [`Agent_AI/tools.py`](./Agent_AI/tools.py) (Proxmox / HA / Telegram shape) |
+| **Production agent + human-approval gate** | [HomelabSentinel `agent_v5_approval.py` ↗](https://github.com/naveen6gowda/python-for-ai/blob/main/Agent_AI/agent_v5_approval.py) |
+| **Real API integration in agent tools** | [`tools.py`](./tools.py) (Open-Meteo) · [HomelabSentinel `tools.py` ↗](https://github.com/naveen6gowda/python-for-ai/blob/main/Agent_AI/tools.py) (Proxmox / HA / Telegram) |
 | **Data wrangling around LLM workflows** | [`get_data.py`](./get_data.py) |
 | **Local LLM inference / infrastructure** | [`ollama-lxc-setup.md`](./ollama-lxc-setup.md) |
-| **Python packaging (PEP 621 / `uv`)** | [`Agent_AI/pyproject.toml`](./Agent_AI/pyproject.toml) |
+| **Python packaging (PEP 621 / `uv`)** | [HomelabSentinel `pyproject.toml` ↗](https://github.com/naveen6gowda/python-for-ai/blob/main/Agent_AI/pyproject.toml) |
 | **Secret hygiene** | `.env` + `.gitignore`, no API keys in code |
 
 ---
 
-## Roadmap
+## Status — shipped & running
 
-Active work in progress:
+What used to be "roadmap" is now in production in [`python-for-ai`](https://github.com/naveen6gowda/python-for-ai):
 
-- **Wiring `Agent_AI`'s stubbed tools to real Proxmox + HA APIs** behind a `dry_run` flag.
-- **Wrapping the agent in FastAPI** (already in `pyproject.toml`) so it runs as a long-lived service, triggered from Home Assistant / Telegram.
-- **Observability** — token usage, tool-call latency, decision traces — debugging agents without traces is impossible.
-- **Memory** — short-term conversational + long-term entity memory on Postgres + pgvector (already running in the homelab Docker stack).
-- **Evaluation** — scripted scenarios (container stopped, memory at 90%, HA offline) to regression-test the agent's decisions as the prompt and toolset evolve.
+- ✅ **Real Proxmox + HA + Portainer integration** (no more stubs), with read-before-write enforced.
+- ✅ **Long-lived services** — a Telegram bot **and** an Alexa voice bridge (FastAPI), under `systemd`.
+- ✅ **Observability** — LangSmith tracing (v4) plus a homemade token-usage audit log (v5).
+- ✅ **Durable memory** — per-chat conversation state via a LangGraph SQLite checkpointer.
+- ✅ **Human-in-the-loop approval gate** — the safety feature the stubbed v1 only hinted at.
+
+Still exploring: long-term entity memory on Postgres + pgvector, and a scripted
+evaluation harness for the agent's decisions.
 
 ---
 
