@@ -8,7 +8,7 @@
 Proxmox · Home Assistant · Docker state — and asks permission before it
 changes anything.*
 
-[![Full source](https://img.shields.io/badge/Full_source-python--for--ai-181717?logo=github)](https://github.com/naveen6gowda/python-for-ai)
+[![Full source](https://img.shields.io/badge/Full_source-AI--Agent-181717?logo=github)](https://github.com/naveen6gowda/AI-Agent)
 ![Python](https://img.shields.io/badge/Python-3.14-3776AB?logo=python&logoColor=white)
 ![LangGraph](https://img.shields.io/badge/LangGraph-1.x-1C3C3C?logo=langchain&logoColor=white)
 ![Claude](https://img.shields.io/badge/Claude-Sonnet-D97757?logo=anthropic&logoColor=white)
@@ -18,7 +18,7 @@ changes anything.*
 
 > 📦 **This page is a showcase.** The complete, runnable project — all source,
 > diagrams, and a file-by-file teaching guide — lives in its own repository:
-> ### → **[github.com/naveen6gowda/python-for-ai ↗](https://github.com/naveen6gowda/python-for-ai)**
+> ### → **[github.com/naveen6gowda/AI-Agent ↗](https://github.com/naveen6gowda/AI-Agent)**
 
 ---
 
@@ -161,6 +161,6 @@ exact same graph, just with an approval function that always denies — so it's
 **The complete project — every file, the diagrams above in context, and a
 full teaching guide:**
 
-### → [github.com/naveen6gowda/python-for-ai ↗](https://github.com/naveen6gowda/python-for-ai)
+### → [github.com/naveen6gowda/AI-Agent ↗](https://github.com/naveen6gowda/AI-Agent)
 
 </div>

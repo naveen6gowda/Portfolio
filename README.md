@@ -1,8 +1,6 @@
 <div align="center">
 
-# Naveen Gowda
-
-### Embedded Systems Engineer · AI / LLM Applications · Home Automation
+<img src="./assets/banner.svg" alt="Naveen Gowda — Embedded Systems · AI / LLM Applications · Home Automation" width="100%" />
 
 *Agentic AI · local LLM infrastructure · ESP32 firmware · PCB design — all designed, deployed, and running 24/7 in a production homelab.*
 
@@ -16,7 +14,7 @@
 ![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
 ![KiCad](https://img.shields.io/badge/KiCad-314CB0?logo=kicad&logoColor=white)
 
-📍 Germany  ·  ✉️ naveen6gowda@gmail.com  ·  🛰️ Flagship: **[HomelabSentinel agent ↗](https://github.com/naveen6gowda/python-for-ai)**
+📍 Germany  ·  ✉️ naveen6gowda@gmail.com  ·  🛰️ Flagship: **[HomelabSentinel agent ↗](https://github.com/naveen6gowda/AI-Agent)**
 
 </div>
 
@@ -31,7 +29,7 @@ follow-along.
 **Related repositories**
 | Repo | What |
 |---|---|
-| 🛰️ [`python-for-ai`](https://github.com/naveen6gowda/python-for-ai) | **HomelabSentinel** — my agentic-AI homelab SRE (LangGraph + human-approval gate). Full source. |
+| 🛰️ [`AI-Agent`](https://github.com/naveen6gowda/AI-Agent) | **HomelabSentinel** — my agentic-AI homelab SRE (LangGraph + human-approval gate). Full source. |
 | 🧪 [`ai/`](./ai/) | LangChain / LangGraph chains, tool-use loops, and structured-output examples (in this repo) |
 | 🔌 [`KiCad-projects`](https://github.com/naveen6gowda/KiCad-projects) | PCB designs — CM5 carrier, relay controller |
 
@@ -69,7 +67,7 @@ on top of a background in IoT and embedded hardware. My work spans the whole sta
 
 > 🛰️ **LangChain · LangGraph · the Anthropic SDK — from a raw tool-loop to a production agent that runs my homelab.**
 
-**In this repo:** [`ai/`](./ai/)  ·  **Flagship (full source):** [`python-for-ai ↗`](https://github.com/naveen6gowda/python-for-ai)
+**In this repo:** [`ai/`](./ai/)  ·  **Flagship (full source):** [`AI-Agent ↗`](https://github.com/naveen6gowda/AI-Agent)
 
 ### ⭐ Featured — HomelabSentinel: an agentic-AI SRE
 
@@ -130,7 +128,7 @@ flowchart TD
 - 🔌 **Production surface** — Telegram bot, Alexa voice bridge, BM25 RAG over my runbooks, and 5 `systemd` monitor timers.
 
 👉 **Full source, the complete architecture, and a file-by-file teaching guide:**
-**[github.com/naveen6gowda/python-for-ai ↗](https://github.com/naveen6gowda/python-for-ai)**
+**[github.com/naveen6gowda/AI-Agent ↗](https://github.com/naveen6gowda/AI-Agent)**
 
 ### 🧱 Foundations — single concepts, runnable in isolation ([`ai/`](./ai/))
 
@@ -189,23 +187,23 @@ homelab operations.
 
 **Directory:** [`docker/`](./docker/)
 
-| Category | Services |
-|----------|----------|
-| 🎬 **Media** | Jellyfin (movies / TV), Immich (photos + ML face recognition) |
-| 🤖 **AI / LLM** | Open WebUI → Ollama (local GPU) + OpenRouter (cloud fallback) |
-| ⚙️ **Automation** | n8n (visual workflow automation, HA integration) |
-| 🔐 **Security** | Vaultwarden (self-hosted Bitwarden), AdGuard Home (DNS ad-blocker) |
-| 💶 **Finance** | Firefly III (personal finance & budgeting) |
-| 🔖 **Bookmarks** | Linkwarden (archiving + Meilisearch full-text search) |
-| 📊 **Management** | Portainer, Watchtower (auto-update), Dozzle (logs), Prunemate |
-| 🔄 **Sync & Backup** | Syncthing (P2P sync), Duplicati (encrypted backups) |
-| 🗄️ **Databases** | PostgreSQL + pgvector, MariaDB, Redis |
+```mermaid
+flowchart TB
+    CLOUD["☁️ Typical cloud SaaS"] -->|"replaced by self-hosted · zero cloud"| HOST
+    subgraph HOST["🐳 Debian VM — 26 containers"]
+      direction LR
+      MEDIA["🎬 Media<br/>Jellyfin · Immich (ML)"]
+      AILLM["🤖 AI / LLM<br/>Open WebUI · Ollama · OpenRouter"]
+      AUTO["⚙️ Automation<br/>n8n"]
+      SEC["🔐 Security<br/>Vaultwarden · AdGuard DNS"]
+      FIN["💶 Finance & Bookmarks<br/>Firefly III · Linkwarden"]
+      OPS["📊 Management<br/>Portainer · Watchtower · Dozzle"]
+      BK["🔄 Sync & Backup<br/>Syncthing · Duplicati"]
+      DB[("🗄️ Databases<br/>Postgres+pgvector · MariaDB · Redis")]
+    end
+```
 
-**Highlights:** zero cloud dependencies · Immich on-device CLIP semantic search + face
-recognition · Open WebUI bridging local GPU Ollama with an OpenRouter fallback · n8n
-automations across HA / Immich · Watchtower weekly auto-updates with notifications.
-
-Full compose file (secrets removed) + architecture diagram: [`docker/`](./docker/)
+**Highlights:** zero cloud dependencies · Immich on-device CLIP search + face recognition · Open WebUI bridges local GPU Ollama with an OpenRouter fallback · n8n automations across HA & Immich · Watchtower auto-updates. Full compose (secrets removed): [`docker/`](./docker/).
 
 ---
 
@@ -282,7 +280,7 @@ flowchart LR
 
 | Skill | Evidence |
 |-------|----------|
-| **AI-agent architectures** | **HomelabSentinel** — LangGraph agent (v1→v5) with a human-in-the-loop `interrupt()` approval gate over Proxmox + HA + Docker — [full code ↗](https://github.com/naveen6gowda/python-for-ai) |
+| **AI-agent architectures** | **HomelabSentinel** — LangGraph agent (v1→v5) with a human-in-the-loop `interrupt()` approval gate over Proxmox + HA + Docker — [full code ↗](https://github.com/naveen6gowda/AI-Agent) |
 | **LLM application development** | LangChain & LangGraph chains, structured output, LCEL, ReAct agents — [`ai/`](./ai/) |
 | **Structured LLM output** | Pydantic-typed responses, validation, enum constraints — [`ai/structure_io.py`](./ai/structure_io.py) |
 | **Local AI infrastructure** | llama.cpp + Hermes (current), Ollama + OpenClaw (earlier), iGPU passthrough, Open WebUI, model management on Proxmox |
@@ -306,7 +304,7 @@ homelab-projects/
 │   ├── README.md
 │   ├── LCEL.py · structure_io.py · tools.py · custom_langraph.py · …
 │   ├── ollama-lxc-setup.md
-│   └── Agent_AI/             ← HomelabSentinel showcase (full code → python-for-ai)
+│   └── Agent_AI/             ← HomelabSentinel showcase (full code → AI-Agent)
 ├── homelab/                  ← infrastructure docs
 │   └── infrastructure.md
 ├── docker/                   ← 26-container compose stack (secrets removed)
@@ -326,7 +324,7 @@ homelab-projects/
 
 - ✉️ **Email:** naveen6gowda@gmail.com
 - 🐙 **GitHub:** [github.com/naveen6gowda](https://github.com/naveen6gowda)
-- 🛰️ **Flagship project:** [HomelabSentinel — python-for-ai ↗](https://github.com/naveen6gowda/python-for-ai)
+- 🛰️ **Flagship project:** [HomelabSentinel — AI-Agent ↗](https://github.com/naveen6gowda/AI-Agent)
 - 📍 **Location:** Germany
 
 ---

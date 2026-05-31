@@ -71,7 +71,7 @@ a five-step agent course (`agent_v1` raw loop → `agent_v5` with a human-approv
 gate), two-brain (Claude + local Gemma) cost design, a Telegram bot, an Alexa
 voice bridge, BM25 RAG, and five scheduled monitors — lives in its own repository:
 
-> ### → **[github.com/naveen6gowda/python-for-ai ↗](https://github.com/naveen6gowda/python-for-ai)**
+> ### → **[github.com/naveen6gowda/AI-Agent ↗](https://github.com/naveen6gowda/AI-Agent)**
 
 See the **[showcase with architecture diagrams](./Agent_AI/README.md)** for the full tour.
 
@@ -100,7 +100,7 @@ python Langraph_prebuilt.py
 python custom_langraph.py
 
 # 4. The full homelab agent (HomelabSentinel) lives in its own repo:
-#    https://github.com/naveen6gowda/python-for-ai
+#    https://github.com/naveen6gowda/AI-Agent
 ```
 
 For local inference (no API key, fully offline), point any of these scripts at the **inference LXC** described in [`ollama-lxc-setup.md`](./ollama-lxc-setup.md). Current target is **llama.cpp's `llama-server`** on `:8080`; the earlier **Ollama** endpoint on `:11434` still works the same way. `claude-sonnet-4-6` can be swapped for `qwen2.5:3b` / `llama3.2:3b` via `ChatOllama`, or for any local GGUF by pointing `ChatOpenAI(base_url=...)` at the llama-server endpoint.
@@ -113,21 +113,21 @@ For local inference (no API key, fully offline), point any of these scripts at t
 |-----------|---------------|
 | **LangChain LCEL chains** | [`LCEL.py`](./LCEL.py) |
 | **Structured output with Pydantic** | [`structure_io.py`](./structure_io.py), [`structured.py`](./structured.py) |
-| **Tool-use loop (raw Anthropic SDK)** | [`tools.py`](./tools.py) · [HomelabSentinel `agent_v1_raw.py` ↗](https://github.com/naveen6gowda/python-for-ai/blob/main/Agent_AI/agent_v1_raw.py) |
+| **Tool-use loop (raw Anthropic SDK)** | [`tools.py`](./tools.py) · [HomelabSentinel `agent_v1_raw.py` ↗](https://github.com/naveen6gowda/AI-Agent/blob/main/Agent_AI/agent_v1_raw.py) |
 | **LangGraph — prebuilt ReAct agent** | [`Langraph_prebuilt.py`](./Langraph_prebuilt.py) |
 | **LangGraph — hand-built `StateGraph`** | [`custom_langraph.py`](./custom_langraph.py) |
-| **Production agent + human-approval gate** | [HomelabSentinel `agent_v5_approval.py` ↗](https://github.com/naveen6gowda/python-for-ai/blob/main/Agent_AI/agent_v5_approval.py) |
-| **Real API integration in agent tools** | [`tools.py`](./tools.py) (Open-Meteo) · [HomelabSentinel `tools.py` ↗](https://github.com/naveen6gowda/python-for-ai/blob/main/Agent_AI/tools.py) (Proxmox / HA / Telegram) |
+| **Production agent + human-approval gate** | [HomelabSentinel `agent_v5_approval.py` ↗](https://github.com/naveen6gowda/AI-Agent/blob/main/Agent_AI/agent_v5_approval.py) |
+| **Real API integration in agent tools** | [`tools.py`](./tools.py) (Open-Meteo) · [HomelabSentinel `tools.py` ↗](https://github.com/naveen6gowda/AI-Agent/blob/main/Agent_AI/tools.py) (Proxmox / HA / Telegram) |
 | **Data wrangling around LLM workflows** | [`get_data.py`](./get_data.py) |
 | **Local LLM inference / infrastructure** | [`ollama-lxc-setup.md`](./ollama-lxc-setup.md) |
-| **Python packaging (PEP 621 / `uv`)** | [HomelabSentinel `pyproject.toml` ↗](https://github.com/naveen6gowda/python-for-ai/blob/main/Agent_AI/pyproject.toml) |
+| **Python packaging (PEP 621 / `uv`)** | [HomelabSentinel `pyproject.toml` ↗](https://github.com/naveen6gowda/AI-Agent/blob/main/Agent_AI/pyproject.toml) |
 | **Secret hygiene** | `.env` + `.gitignore`, no API keys in code |
 
 ---
 
 ## Status — shipped & running
 
-What used to be "roadmap" is now in production in [`python-for-ai`](https://github.com/naveen6gowda/python-for-ai):
+What used to be "roadmap" is now in production in [`AI-Agent`](https://github.com/naveen6gowda/AI-Agent):
 
 - ✅ **Real Proxmox + HA + Portainer integration** (no more stubs), with read-before-write enforced.
 - ✅ **Long-lived services** — a Telegram bot **and** an Alexa voice bridge (FastAPI), under `systemd`.
