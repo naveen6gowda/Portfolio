@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 340" width="1280" height="340" role="img" aria-label="Naveen Gowda — Embedded Systems, AI/LLM Applications, Home Automation">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 340" width="1280" height="340" role="img" aria-label="Naveen Kumar — Embedded Systems, AI/LLM Applications, Home Automation">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#0b1220"/>
@@ -41,7 +41,7 @@
   <rect x="80" y="92" width="6" height="150" rx="3" fill="url(#accent)"/>
 
   <!-- title + subtitle -->
-  <text x="112" y="152" font-family="'Segoe UI',Helvetica,Arial,sans-serif" font-size="66" font-weight="700" fill="#f8fafc">Naveen Gowda</text>
+  <text x="112" y="152" font-family="'Segoe UI',Helvetica,Arial,sans-serif" font-size="66" font-weight="700" fill="#f8fafc">Naveen Kumar</text>
   <text x="114" y="198" font-family="'Segoe UI',Helvetica,Arial,sans-serif" font-size="25" font-weight="400" fill="#9fb3c8">Embedded Systems  ·  AI / LLM Applications  ·  Home Automation</text>
 
   <!-- tech pills -->

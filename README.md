@@ -6,7 +6,6 @@
 
 ![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white)
 ![LangGraph](https://img.shields.io/badge/LangGraph-1C3C3C?logo=langchain&logoColor=white)
-![Claude](https://img.shields.io/badge/Claude-D97757?logo=anthropic&logoColor=white)
 ![ESP32](https://img.shields.io/badge/ESP32-E7352C?logo=espressif&logoColor=white)
 ![ESPHome](https://img.shields.io/badge/ESPHome-000000?logo=esphome&logoColor=white)
 ![Home Assistant](https://img.shields.io/badge/Home%20Assistant-18BCF2?logo=homeassistant&logoColor=white)
