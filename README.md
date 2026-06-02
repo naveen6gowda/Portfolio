@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="./assets/banner.svg" alt="Naveen Gowda — Embedded Systems · AI / LLM Applications · Home Automation" width="100%" />
+<img src="./assets/banner.svg" alt="Naveen Kumar — Embedded Systems · AI / LLM Applications · Home Automation" width="100%" />
 
 *Agentic AI · local LLM infrastructure · ESP32 firmware · PCB design — all designed, deployed, and running 24/7 in a production homelab.*
 
