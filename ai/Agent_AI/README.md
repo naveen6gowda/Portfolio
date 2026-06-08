@@ -54,7 +54,7 @@ flowchart TD
         GEMMA["🏠 Gemma · local llama.cpp<br/>summaries · RAG · $0"]
     end
 
-    TL["🧰 Tool layer<br/>Proxmox · HA · Portainer · SMART · RAG"]
+    TL["🧰 Tool layer<br/>Proxmox · HA · Portainer · SMART · Speedtest · RAG"]
 
     CAT[/"📄 catalog.yaml<br/>policy as data"/]
     HUMAN["🙋 Me — Approve / Deny"]
@@ -80,7 +80,7 @@ flowchart TD
 | 🧱 **Defense in depth** | 8 independent safety layers, from catalog policy (`restart_policy: never`) to per-action auth boundaries. |
 | 🔌 **One brain, three front-ends** | CLI, Telegram bot, Alexa voice — via a dependency-injected approval function. Voice is **read-only by construction**. |
 | 🔎 **Local RAG** | BM25 lexical search over my markdown runbooks answers *"how do I…"* at **zero Claude tokens**. |
-| 📡 **Headless monitoring** | 5 `systemd` timers (reachability, docker, SMART, backups, energy) that alert on Telegram only when something is wrong. |
+| 📡 **Headless monitoring** | 6 `systemd` timers (reachability, docker, speedtest, SMART, backups, energy) that alert on Telegram only when something is wrong. |
 
 ---
 

@@ -69,7 +69,7 @@ What began as a raw, framework-free tool-loop here grew into **HomelabSentinel**
 a production agentic-AI SRE that now runs my homelab 24/7. The complete project —
 a five-step agent course (`agent_v1` raw loop → `agent_v5` with a human-approval
 gate), two-brain (Claude + local Gemma) cost design, a Telegram bot, an Alexa
-voice bridge, BM25 RAG, and five scheduled monitors — lives in its own repository:
+voice bridge, BM25 RAG, and six scheduled monitors — lives in its own repository:
 
 > ### → **[github.com/naveen6gowda/AI-Agent ↗](https://github.com/naveen6gowda/AI-Agent)**
 

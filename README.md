@@ -93,7 +93,7 @@ flowchart TD
         GEMMA["🏠 Gemma · local llama.cpp<br/>summaries · RAG · $0"]
     end
 
-    TL["🧰 Tool layer<br/>Proxmox · Home Assistant · Portainer · SMART · RAG"]
+    TL["🧰 Tool layer<br/>Proxmox · Home Assistant · Portainer · SMART · Speedtest · RAG"]
     CAT[/"📄 catalog.yaml<br/>policy as data"/]
     HUMAN["🙋 Me — Approve / Deny"]
 
@@ -123,8 +123,8 @@ flowchart TD
 
 - 🛡️ **Human-in-the-loop safety** — a LangGraph `interrupt()` gate pauses every destructive action for my tap (default-deny), backed by **8 layers of defense in depth**.
 - 📈 **Built as a 5-step course** — `agent_v1` (raw ReAct loop, zero frameworks) → `agent_v5` (approval gate + SQLite checkpointer + token economy).
-- 🧠 **Two-brain cost design** — cloud **Claude** reasons; a **local Gemma** (llama.cpp) summarizes, so the 5 scheduled monitors and ~95% of voice commands cost **$0** and run offline.
-- 🔌 **Production surface** — Telegram bot, Alexa voice bridge, BM25 RAG over my runbooks, and 5 `systemd` monitor timers.
+- 🧠 **Two-brain cost design** — cloud **Claude** reasons; a **local Gemma** (llama.cpp) summarizes, so the 6 scheduled monitors and ~95% of voice commands cost **$0** and run offline.
+- 🔌 **Production surface** — Telegram bot, Alexa voice bridge, BM25 RAG over my runbooks, and 6 `systemd` monitor timers (incl. hourly WAN speed checks).
 
 👉 **Full source, the complete architecture, and a file-by-file teaching guide:**
 **[github.com/naveen6gowda/AI-Agent ↗](https://github.com/naveen6gowda/AI-Agent)**
