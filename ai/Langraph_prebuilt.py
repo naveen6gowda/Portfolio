@@ -24,7 +24,7 @@ tools = [get_weather, homelab_status]
 agent = create_react_agent(llm, tools)
 
 result = agent.invoke({
-    "messages": [("user", "Check if jellyfin is up and tell me the weather in Erdweg")]
+    "messages": [("user", "Check if jellyfin is up and tell me the weather in Munich")]
 })
 
 for msg in result["messages"]:
