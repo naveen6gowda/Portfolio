@@ -12,8 +12,8 @@ week_ago = today - timedelta(days=7)
 start_date = week_ago.strftime("%Y-%m-%d")
 end_date = today.strftime("%Y-%m-%d")
 
-# Get Paris weather for past week
-url = f"https://api.open-meteo.com/v1/forecast?latitude=48.33&longitude=11.30&start_date={start_date}&end_date={end_date}&daily=temperature_2m_max,temperature_2m_min"
+# Get Munich weather for past week
+url = f"https://api.open-meteo.com/v1/forecast?latitude=48.14&longitude=11.58&start_date={start_date}&end_date={end_date}&daily=temperature_2m_max,temperature_2m_min"
 
 response = requests.get(url)
 data = response.json()
@@ -46,5 +46,5 @@ if not os.path.exists('data'):
     os.makedirs('data')
 
 # Save to CSV
-df.to_csv('data/Erdweg_weather.csv', index=False)
-print("Data saved to data/Erdweg_weather.csv")
+df.to_csv('data/Munich_weather.csv', index=False)
+print("Data saved to data/Munich_weather.csv")

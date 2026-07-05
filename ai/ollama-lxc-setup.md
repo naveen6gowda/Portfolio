@@ -1,11 +1,17 @@
-# Local AI on Proxmox LXC — llama.cpp + Hermes (current), Ollama + OpenClaw (earlier)
+# Local AI on Proxmox LXC — generations 1 & 2 (Ollama → llama.cpp) — historical
 
-This LXC has gone through two local-AI stacks:
+> **Note (July 2026):** this doc covers the first two generations of my local-AI
+> stack. The **current** generation is **LM Studio** on an Apple-silicon node,
+> serving one model (Qwen3.6-35B MoE) through an OpenAI-compatible API to every
+> agent — see the [main README](../README.md#2-ai-homelab-infrastructure). Kept
+> because the migration path and its design decisions are part of the work.
+
+This LXC went through two local-AI stacks:
 
 | Phase | Inference engine | Agent stack |
 |-------|------------------|-------------|
-| **Earlier** | **Ollama** — easy model management, OpenAI-compatible API on `:11434`, integrates cleanly with Home Assistant and Open WebUI | **OpenClaw** — first local agent stack I ran on top of Ollama |
-| **Current** | **llama.cpp** (Vulkan backend) — direct GGUF inference with full control over quantization, context length, and `llama-server` tuning | **Hermes Agent** v0.13.0 (~35 tools / 88 skills, GPT-5.5) — migrated from OpenClaw via `hermes claw migrate` |
+| **Gen 1** | **Ollama** — easy model management, OpenAI-compatible API on `:11434`, integrates cleanly with Home Assistant and Open WebUI | **OpenClaw** — first local agent stack I ran on top of Ollama |
+| **Gen 2** | **llama.cpp** (Vulkan backend) — direct GGUF inference with full control over quantization, context length, and `llama-server` tuning | **Hermes Agent** v0.13.0 (~35 tools / 88 skills) — migrated from OpenClaw via `hermes claw migrate` |
 
 The LXC and iGPU passthrough stayed the same across both migrations — only the engine and agent changed. The Ollama install instructions below are kept as historical reference and because it's still useful as a quick OpenAI-compatible endpoint for the LangChain / LangGraph examples in this folder.
 
@@ -89,9 +95,9 @@ llama.cpp's `llama-server` exposes the same `/v1/chat/completions` shape as Olla
 - Squeeze the iGPU harder with `-ngl 99 --batch-size N --ubatch-size N`.
 - It's the inference layer the **Hermes Agent** sits on top of.
 
-### Hermes Agent on top of llama.cpp — current agent stack
+### Hermes Agent on top of llama.cpp — gen-2 agent stack
 
-[Hermes](https://github.com/ollama/...) v0.13.0 replaced **OpenClaw** as my local agent stack on **2026-05-10**. Hermes runs out of `/home/ollama/.hermes/` and ships ~35 tools and ~88 skills against the local `llama-server` endpoint. The model used for agentic reasoning is **GPT-5.5**.
+**Hermes** v0.13.0 replaced **OpenClaw** as my local agent stack on **2026-05-10**. Hermes runs out of `/home/ollama/.hermes/` and ships ~35 tools and ~88 skills against the local `llama-server` endpoint. (Today Hermes points at the same LM Studio-served model as HomelabSentinel.)
 
 ```bash
 # Migrating from the earlier OpenClaw setup

@@ -1,10 +1,10 @@
 # AI / LLM Application Development
 
-> **LangChain · LangGraph · Anthropic SDK · Pydantic · AI Agents · Tool Use · Structured Output · Local LLM Inference (Ollama)**
+> **LangChain · LangGraph · Anthropic SDK · Pydantic · AI Agents · Tool Use · Structured Output · Local LLM Inference (LM Studio / OpenAI-compatible)**
 
 Hands-on Python work on **LLM application development** — from the simplest "prompt → LLM → output" chain to a **graph-based, tool-using SRE agent** that operates my homelab.
 
-This is the layer above local inference: chains, structured output, tool use, and the graph-based control flow that real agents need. The infrastructure these run on (Proxmox + Ollama with iGPU passthrough) is documented in [`ollama-lxc-setup.md`](./ollama-lxc-setup.md).
+This is the layer above local inference: chains, structured output, tool use, and the graph-based control flow that real agents need. The local-inference platform has been through three generations — Ollama, llama.cpp, and today **LM Studio** serving one model to every agent through an OpenAI-compatible API. The first-generation setup is documented in [`ollama-lxc-setup.md`](./ollama-lxc-setup.md).
 
 ---
 
@@ -23,14 +23,15 @@ Each file is a self-contained, runnable example.
 
 | Layer | Choice |
 |-------|--------|
-| LLM provider | **Anthropic** (`claude-sonnet-4-6`) via `anthropic` SDK and `langchain-anthropic` |
+| LLM provider (examples) | **Anthropic** (`claude-sonnet-4-6`) via `anthropic` SDK and `langchain-anthropic` — the teaching examples in this folder |
+| LLM provider (production) | **100% local** — one model served by **LM Studio** (OpenAI-compatible, bearer-token auth) powers HomelabSentinel and every helper. See [`AI-Agent` ↗](https://github.com/naveen6gowda/AI-Agent). |
 | App framework | **LangChain** (chains, structured output, LCEL) + **LangGraph** (stateful agents) |
+| Observability | **Langfuse** (self-hosted) — agent runs, tool calls, token accounting |
 | Validation | **Pydantic v2** (typed structured output, schema-constrained generation) |
 | Config | `python-dotenv` (API key via `.env`, never committed) |
 | Data / analytics | `requests` · `pandas` · `matplotlib` |
-| Local inference target | **llama.cpp** (Vulkan) on Proxmox LXC with iGPU passthrough — current setup. Earlier: **Ollama** on the same LXC. See [`ollama-lxc-setup.md`](./ollama-lxc-setup.md). |
-| Local agent stack | **Hermes Agent** v0.13.0 on top of llama.cpp (model: **GPT-5.5**). Earlier: **OpenClaw** on Ollama, migrated via `hermes claw migrate`. |
-| Day-to-day coding agent | **OpenAI Codex** (GPT-5.5) — used as the AI coding pair-programmer for this repo and the Hermes work. |
+| Local inference history | Gen 1: **Ollama** on a Proxmox LXC (iGPU) — see [`ollama-lxc-setup.md`](./ollama-lxc-setup.md). Gen 2: **llama.cpp** (Vulkan). Gen 3 (current): **LM Studio** on an Apple-silicon node serving **Qwen3.6-35B (MoE)**. |
+| Local agent stack | **Hermes Agent** (web dashboard · Telegram · sandboxed Python · cron) — now running on the same local model as Sentinel. |
 | Packaging (Agent_AI) | `pyproject.toml` (PEP 621), `uv`-compatible |
 
 ---
@@ -60,7 +61,7 @@ Each file is a self-contained, runnable example.
 
 | File | What it does |
 |------|--------------|
-| [`get_data.py`](./get_data.py) | Pulls a week of weather data from the **Open-Meteo API**, loads it into a pandas DataFrame, and writes a clean CSV (`data/Erdweg_weather.csv`). Used as the data source for downstream charting / analysis. |
+| [`get_data.py`](./get_data.py) | Pulls a week of Munich weather data from the **Open-Meteo API**, loads it into a pandas DataFrame, and writes a clean CSV (`data/Munich_weather.csv`). Used as the data source for downstream charting / analysis. |
 | [`hello.py`](./hello.py) · [`IPL.py`](./IPL.py) | Small Python warm-up scripts |
 
 ### 🛰️ `Agent_AI/` — HomelabSentinel (flagship)
@@ -68,8 +69,11 @@ Each file is a self-contained, runnable example.
 What began as a raw, framework-free tool-loop here grew into **HomelabSentinel**,
 a production agentic-AI SRE that now runs my homelab 24/7. The complete project —
 a five-step agent course (`agent_v1` raw loop → `agent_v5` with a human-approval
-gate), two-brain (Claude + local Gemma) cost design, a Telegram bot, an Alexa
-voice bridge, BM25 RAG, and six scheduled monitors — lives in its own repository:
+gate, archived in `legacy/`), **100% local single-LLM design** (LM Studio,
+OpenAI-compatible, runtime `/model` switching), self-hosted **Langfuse** tracing,
+a Telegram bot, an Alexa voice bridge, BM25 RAG, a commute guard, a finance
+bridge into Firefly III, and **8 scheduled monitors** with a failure-pager
+reliability layer — lives in its own repository:
 
 > ### → **[github.com/naveen6gowda/AI-Agent ↗](https://github.com/naveen6gowda/AI-Agent)**
 
@@ -77,7 +81,9 @@ See the **[showcase with architecture diagrams](./Agent_AI/README.md)** for the 
 
 **Highlights:**
 - **Human-in-the-loop safety** — a LangGraph `interrupt()` gate pauses every destructive action for my approval (default-deny), backed by 8 layers of defense in depth.
-- **Cost-aware multi-model routing** — cloud Claude reasons, local Gemma summarizes; the scheduled monitors and ~95% of voice commands cost **$0** and run offline.
+- **100% local inference at €0** — one LM Studio-served model powers the agent loop and every helper; runtime `/model` switching with a probe-before-switch that refuses models the server can't run.
+- **Observable** — every run, tool call, and token count traced in self-hosted **Langfuse**; traces never leave home.
+- **Reliable by design** — `OnFailure=` Telegram pagers on every systemd unit, nightly checkpoint-DB retention, and deterministic fallbacks so monitors never go silent if the LLM is down.
 - **Durable** — a SQLite checkpointer survives a process restart *mid-approval*.
 - **Real integrations, not stubs** — live Proxmox API, Home Assistant, and Portainer, with the QEMU page-cache memory trap handled correctly before any restart.
 
@@ -103,7 +109,7 @@ python custom_langraph.py
 #    https://github.com/naveen6gowda/AI-Agent
 ```
 
-For local inference (no API key, fully offline), point any of these scripts at the **inference LXC** described in [`ollama-lxc-setup.md`](./ollama-lxc-setup.md). Current target is **llama.cpp's `llama-server`** on `:8080`; the earlier **Ollama** endpoint on `:11434` still works the same way. `claude-sonnet-4-6` can be swapped for `qwen2.5:3b` / `llama3.2:3b` via `ChatOllama`, or for any local GGUF by pointing `ChatOpenAI(base_url=...)` at the llama-server endpoint.
+For local inference (no API key, fully offline), point any of these scripts at an **OpenAI-compatible local endpoint** via `ChatOpenAI(base_url=...)`. The current production target is an **LM Studio** server (this is exactly how HomelabSentinel runs); llama.cpp's `llama-server` and Ollama work the same way — the first-generation Ollama LXC is documented in [`ollama-lxc-setup.md`](./ollama-lxc-setup.md).
 
 ---
 
@@ -130,14 +136,18 @@ For local inference (no API key, fully offline), point any of these scripts at t
 What used to be "roadmap" is now in production in [`AI-Agent`](https://github.com/naveen6gowda/AI-Agent):
 
 - ✅ **Real Proxmox + HA + Portainer integration** (no more stubs), with read-before-write enforced.
-- ✅ **Long-lived services** — a Telegram bot **and** an Alexa voice bridge (FastAPI), under `systemd`.
-- ✅ **Observability** — LangSmith tracing (v4) plus a homemade token-usage audit log (v5).
-- ✅ **Durable memory** — per-chat conversation state via a LangGraph SQLite checkpointer.
+- ✅ **Long-lived services** — a Telegram bot **and** an Alexa voice bridge (FastAPI), under `systemd`, each with an `OnFailure=` failure pager.
+- ✅ **Observability** — self-hosted **Langfuse** tracing (replacing the earlier LangSmith setup) plus a token-usage audit log.
+- ✅ **100% local inference** — the whole system runs on one LM Studio-served model; no cloud API in the loop.
+- ✅ **Durable memory** — per-chat conversation state via a LangGraph SQLite checkpointer, with nightly retention.
 - ✅ **Human-in-the-loop approval gate** — the safety feature the stubbed v1 only hinted at.
 
-Still exploring: long-term entity memory on Postgres + pgvector, and a scripted
-evaluation harness for the agent's decisions.
+Next per the [architecture roadmap ↗](https://github.com/naveen6gowda/AI-Agent/blob/main/Agent_AI/docs/ARCHITECTURE.md):
+one tool registry, a `sentinel-mcp` MCP server, and a scripted evaluation
+harness for the agent's decisions.
 
 ---
 
-*All code here was written, run, and debugged on my own infrastructure. AI pair-programming is done with **OpenAI Codex (GPT-5.5)** as the coding agent — the architecture, the decisions, and the homelab integration are mine.*
+*All code here was written, run, and debugged on my own infrastructure. I use
+AI pair-programming tools in the daily loop — the architecture, the decisions,
+and the homelab integration are mine.*

@@ -6,12 +6,13 @@
 
 *Talk to your infrastructure in plain English. An LLM reasons over live
 Proxmox · Home Assistant · Docker state — and asks permission before it
-changes anything.*
+changes anything. 100% local inference.*
 
 [![Full source](https://img.shields.io/badge/Full_source-AI--Agent-181717?logo=github)](https://github.com/naveen6gowda/AI-Agent)
 ![Python](https://img.shields.io/badge/Python-3.14-3776AB?logo=python&logoColor=white)
 ![LangGraph](https://img.shields.io/badge/LangGraph-1.x-1C3C3C?logo=langchain&logoColor=white)
-![Claude](https://img.shields.io/badge/Claude-Sonnet-D97757?logo=anthropic&logoColor=white)
+![Local LLM](https://img.shields.io/badge/LLM-100%25_local_·_LM_Studio-FF6B35)
+![Langfuse](https://img.shields.io/badge/Langfuse-self--hosted-7C3AED)
 ![Status](https://img.shields.io/badge/status-running_24%2F7-success)
 
 </div>
@@ -30,7 +31,9 @@ action is needed, and **stops at a human-approval gate before touching anything.
 
 It started as a learning exercise (a raw, framework-free tool-loop) and grew into
 the real on-call agent for my homelab — engineered around two constraints every
-homelabber has: **don't let the AI break things**, and **don't run up a cloud bill.**
+homelabber has: **don't let the AI break things**, and **don't ship your home to
+the cloud.** Since the July 2026 redesign, every token of inference is served by
+**one local model**, and every trace lands in **self-hosted Langfuse**.
 
 ---
 
@@ -49,23 +52,20 @@ flowchart TD
         CP[("💾 SQLite<br/>checkpoints")]
     end
 
-    subgraph MB["Two brains"]
-        CLAUDE["☁️ Claude<br/>reasoning + tool calls"]
-        GEMMA["🏠 Gemma · local llama.cpp<br/>summaries · RAG · $0"]
-    end
-
-    TL["🧰 Tool layer<br/>Proxmox · HA · Portainer · SMART · Speedtest · RAG"]
+    LLM["🏠 Local LLM · LM Studio<br/>OpenAI-compatible · runtime /model switch<br/>agent loop + all helpers · €0"]
+    OBS[("📊 Langfuse<br/>self-hosted traces")]
+    TL["🧰 Tool layer<br/>Proxmox · HA · Portainer · SMART · Speedtest<br/>Commute (MVG) · Finance (Firefly III) · BM25 RAG"]
 
     CAT[/"📄 catalog.yaml<br/>policy as data"/]
     HUMAN["🙋 Me — Approve / Deny"]
 
     FE --> BR
-    BR --> CLAUDE
+    BR --> LLM
     BR <-->|"interrupt() gate"| HUMAN
     BR --> TL
-    TL --> GEMMA
     TL -. reads inventory .-> CAT
     BR -. persists .-> CP
+    BR -. traces .-> OBS
 ```
 
 ---
@@ -75,35 +75,39 @@ flowchart TD
 | Capability | How |
 |---|---|
 | 🛡️ **Human-in-the-loop safety** | A LangGraph `interrupt()` gate pauses every destructive tool call for my tap on Telegram. **Default-deny** — timeout/error/silence = no. |
-| 🧠 **Cost-aware multi-model routing** | Cloud **Claude** reasons; a **local Gemma** (llama.cpp) does cheap summaries. Monitors + ~95% of voice run **offline at $0**. |
+| 🏠 **100% local, cost-aware inference** | One model served by **LM Studio** (OpenAI-compatible) powers the agent loop *and* every helper. Marginal cost **€0**; runtime `/model` switching with **probe-before-switch**. |
+| 📊 **LLM observability** | Every agent run, tool call, and token count traced in **self-hosted Langfuse** — chosen over LangSmith so traces never leave home. |
 | 💾 **Durable, resumable agents** | A SQLite checkpointer persists graph state across the interrupt — approve after dinner, survive a process restart mid-decision. |
 | 🧱 **Defense in depth** | 8 independent safety layers, from catalog policy (`restart_policy: never`) to per-action auth boundaries. |
+| 🚨 **The watcher is watched** | Every systemd unit carries an `OnFailure=` hook that pages me on Telegram with the journal tail; a nightly retention job prunes the checkpoint DB (a lesson learned at **274 MB**). |
 | 🔌 **One brain, three front-ends** | CLI, Telegram bot, Alexa voice — via a dependency-injected approval function. Voice is **read-only by construction**. |
-| 🔎 **Local RAG** | BM25 lexical search over my markdown runbooks answers *"how do I…"* at **zero Claude tokens**. |
-| 📡 **Headless monitoring** | 6 `systemd` timers (reachability, docker, speedtest, SMART, backups, energy) that alert on Telegram only when something is wrong. |
+| 🔎 **Local RAG** | BM25 lexical search over my markdown runbooks answers *"how do I…"* fully offline. |
+| 📡 **Headless monitoring** | **8 `systemd` timers** — reachability, Docker, SMART, WAN speed, backups, energy, an **MVG commute guard** (departures → Alexa), and nightly DB maintenance — plus a **finance bridge** that turns bank-app notifications into Firefly III draft transactions. Alerts only when something is wrong. |
 
 ---
 
 ## 📈 Built as a five-step course (v1 → v5)
 
 The five `agent_v*` files solve the **same task** five times — each adds exactly
-one production concern. It's the clearest way I know to show *how an agent
-actually works* under the framework sugar.
+one production concern. They're now archived in
+[`legacy/` ↗](https://github.com/naveen6gowda/AI-Agent/tree/main/Agent_AI/legacy)
+(v5 is the production agent), and they're still the clearest way I know to show
+*how an agent actually works* under the framework sugar.
 
 ```mermaid
 flowchart LR
     V1["v1 · raw ReAct<br/>a while-loop over an LLM"] --> V2["v2 · LangChain<br/>@tool hides the loop"]
     V2 --> V3["v3 · LangGraph<br/>loop becomes editable data"]
-    V3 --> V4["v4 · LangSmith<br/>observability"]
+    V3 --> V4["v4 · observability<br/>(LangSmith then; Langfuse now)"]
     V4 --> V5["v5 · approval gate<br/>+ checkpointer + token economy"]
 ```
 
 | Version | Adds | The lesson |
 |:--:|---|---|
-| **v1** | The bare ReAct loop (raw Anthropic API) | An agent is a `while` loop over an LLM with tools |
+| **v1** | The bare ReAct loop (raw provider API) | An agent is a `while` loop over an LLM with tools |
 | **v2** | The `@tool` decorator + `create_agent` | The framework just *hides* the loop |
 | **v3** | An explicit `StateGraph` | The loop becomes **editable data** |
-| **v4** | LangSmith tracing | You can't operate what you can't see |
+| **v4** | Tracing (LangSmith then; **self-hosted Langfuse** in production today) | You can't operate what you can't see |
 | **v5** | **Approval gate + checkpointer + token economy** | Editable graph → insert a human gate |
 
 ---
@@ -115,7 +119,7 @@ graph the instant a destructive tool is requested:
 
 ```mermaid
 flowchart TD
-    S([START]) --> A["🧠 agent · Claude reasons"]
+    S([START]) --> A["🧠 agent · LLM reasons"]
     A -->|tools_condition| Q{wants tools?}
     Q -->|no| E([END · answer])
     Q -->|yes| P["🛡️ policy node"]
@@ -126,9 +130,9 @@ flowchart TD
     G -->|"approved → run<br/>denied → 'REFUSED' message"| A
 ```
 
-A denial isn't an exception — it's a synthetic `ToolMessage` fed back to Claude
-saying *"REFUSED by operator."* On its next turn the model reasons about the
-refusal instead of blindly retrying. The read-only **voice** path reuses the
+A denial isn't an exception — it's a synthetic `ToolMessage` fed back to the
+model saying *"REFUSED by operator."* On its next turn the model reasons about
+the refusal instead of blindly retrying. The read-only **voice** path reuses the
 exact same graph, just with an approval function that always denies — so it's
 *physically incapable* of a destructive action, with no separate "read-only mode."
 
@@ -148,11 +152,22 @@ exact same graph, just with an approval function that always denies — so it's
 
 ---
 
+## 📐 Where it's going
+
+[`docs/ARCHITECTURE.md` ↗](https://github.com/naveen6gowda/AI-Agent/blob/main/Agent_AI/docs/ARCHITECTURE.md)
+is an honest review of the current architecture (including what's wrong with it)
+and a phased roadmap: **one tool registry** (every tool declared once, with
+metadata) → a **`sentinel-mcp` MCP server** so any client can consume the same
+tools → a **scripted evaluation harness** for the agent's decisions.
+
+---
+
 ## 🛠️ Tech stack
 
-`Python 3.14` · `LangGraph` · `LangChain` · `Anthropic Claude` ·
-`llama.cpp` (local Gemma) · `FastAPI` · `Pydantic v2` · SQLite checkpointer ·
-`systemd` · Proxmox API · Home Assistant API · Portainer · Telegram Bot API · BM25 RAG
+`Python 3.14` · `LangGraph` · `LangChain` · **local LLM via LM Studio**
+(OpenAI-compatible, runtime model switching) · **Langfuse** (self-hosted) ·
+`FastAPI` · `Pydantic v2` · SQLite checkpointer · `systemd` · Proxmox API ·
+Home Assistant API · Portainer · Telegram Bot API · Firefly III · BM25 RAG
 
 ---
 

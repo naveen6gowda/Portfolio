@@ -32,40 +32,40 @@ Self-hosted service stack running on a Debian VM, managed via Docker Compose. **
 ```
 Debian VM (Docker host)
 │
-├── Homer :3000           ← Start page linking all services
+├── Homer             ← Start page linking all services
 │
 ├── Media Stack
-│   └── Jellyfin          ← Movies/TV (host network for DLNA)
+│   └── Jellyfin      ← Movies/TV (host network for DLNA)
 │
 ├── Photo Stack
-│   ├── Immich :2283      ← Photo sync from phone
+│   ├── Immich            ← Photo sync from phone
 │   ├── Immich ML         ← On-device face recognition + CLIP embeddings
 │   ├── Immich Postgres   ← pgvector database
 │   └── Immich Redis      ← Job queue
 │
 ├── AI Stack
-│   ├── Open WebUI :3006  ← Connects to Ollama (LXC 101) + OpenRouter
-│   └── Mirofish :3010    ← Document/image AI analysis
+│   ├── Open WebUI        ← Connects to Ollama LXC + OpenRouter
+│   └── Mirofish          ← Document/image AI analysis
 │
 ├── Automation Stack
-│   ├── n8n :8525         ← Workflow automation (connects to HA, Immich, etc.)
+│   ├── n8n               ← Workflow automation (connects to HA, Immich, etc.)
 │   ├── n8n Postgres      ← pgvector DB for n8n
 │   └── n8n Redis         ← n8n job queue
 │
 ├── Self-Hosted Apps
-│   ├── Vaultwarden :9091 ← Password manager (Bitwarden-compatible)
-│   ├── Firefly III :8212 ← Personal finance tracking
-│   └── Linkwarden :3099  ← Bookmark archiving + search
+│   ├── Vaultwarden       ← Password manager (Bitwarden-compatible)
+│   ├── Firefly III       ← Personal finance tracking
+│   └── Linkwarden        ← Bookmark archiving + search
 │
 ├── Network
 │   └── AdGuard Home      ← DNS server for entire LAN, blocks ads/trackers
 │
 └── Maintenance
     ├── Syncthing         ← Config/data sync between machines
-    ├── Duplicati :8200   ← Encrypted backups
+    ├── Duplicati         ← Encrypted backups
     ├── Watchtower        ← Weekly auto-update of all images
-    ├── Dozzle :8888      ← Log monitoring
-    └── Prunemate :7676   ← Scheduled image pruning
+    ├── Dozzle            ← Log monitoring
+    └── Prunemate         ← Scheduled image pruning
 ```
 
 ## Notable Technical Details
