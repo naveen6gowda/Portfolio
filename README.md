@@ -2,13 +2,15 @@
 
 <img src="./assets/banner.svg" alt="Naveen Kumar — Agentic AI · Local LLM Infrastructure · Embedded Systems" width="100%" />
 
-*I build **production agentic-AI systems** — LangGraph agents with human-approval gates, 100% local LLM serving, and the reliability engineering to keep them running 24/7 — on top of an embedded/IoT hardware background that keeps me grounded in real systems.*
+*I build **production agentic-AI systems** — LangGraph agents with human-approval gates, an **MCP server**, a golden **eval harness with CI**, 100% local LLM serving, and the reliability engineering to keep them running 24/7 — on top of an embedded/IoT hardware background that keeps me grounded in real systems.*
 
 **AI / Agents** ·
 ![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white)
 ![LangGraph](https://img.shields.io/badge/LangGraph-1C3C3C?logo=langchain&logoColor=white)
+![MCP](https://img.shields.io/badge/MCP-server_·_streamable_HTTP-6E56CF)
 ![Local LLM](https://img.shields.io/badge/LLM-100%25_local_·_LM_Studio-FF6B35)
 ![Langfuse](https://img.shields.io/badge/Langfuse-self--hosted-7C3AED)
+![Evals](https://img.shields.io/badge/Evals-12_scenarios_·_CI-2DA44E)
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
 ![Pydantic](https://img.shields.io/badge/Pydantic-v2-E92063?logo=pydantic&logoColor=white)
 
@@ -34,13 +36,15 @@ real-world use — not a tutorial follow-along.
 
 ## 🆕 What's new — July 2026
 
-The flagship agent, **[HomelabSentinel ↗](https://github.com/naveen6gowda/AI-Agent)**, just shipped a major production update:
+The flagship agent, **[HomelabSentinel ↗](https://github.com/naveen6gowda/AI-Agent)**, just completed its **entire architecture roadmap** — every phase from the honest architecture review is now shipped and running in production:
 
-- **Redesigned around a single 100% local LLM** — one model served by LM Studio (OpenAI-compatible) powers the agent loop *and* every helper. Marginal inference cost: **€0**. The operator switches models at runtime via Telegram `/model`, guarded by a **probe-before-switch** check.
-- **Self-hosted Langfuse observability** — every agent run, tool call, and token count is traced, and the traces never leave home (chosen over LangSmith deliberately).
-- **Two new assistants** — a **commute guard** (polls MVG public-transit departures, announces delays on Alexa) and a **finance bridge** (bank-app push notification → parsed locally → draft transaction in self-hosted Firefly III).
-- **A reliability layer for the agent itself** — every systemd unit carries an `OnFailure=` hook that pages me on Telegram with the journal tail, plus a nightly checkpoint-DB retention job (a lesson learned at 274 MB).
-- **An honest architecture review + phased roadmap** — [`docs/ARCHITECTURE.md` ↗](https://github.com/naveen6gowda/AI-Agent/blob/main/Agent_AI/docs/ARCHITECTURE.md): tool registry → MCP server → evaluation harness.
+- 🌐 **`sentinel-mcp` — a production MCP server.** The agent's whole tool registry (29 tools) is now served to any MCP client — Claude Code, Claude Desktop, other agents — over **streamable HTTP with bearer auth**. The human-approval gate is enforced **server-side**: a destructive call from an external AI still lands as an Approve/Deny card on my phone, **default-deny on timeout**. External models get the same safety rails I do.
+- 🧪 **A scripted evaluation harness** — 12 golden scenarios replay real operational questions against the live agent and score tool selection + final answers. It has already paid for itself: it caught an over-quantized model variant silently degrading tool-call ordering — now tracked as an explicit `known_fail` with the analysis written down. **Evals as regression tests for agent behavior.**
+- ✅ **A real test suite + CI** — 40+ pytest tests (policy gate, MCP auth, tool clients, eval plumbing), including a regression test for a default-deny bug the suite itself surfaced. Green on GitHub Actions on every push.
+- 🧰 **One tool registry** ([`registry.py` ↗](https://github.com/naveen6gowda/AI-Agent/blob/main/Agent_AI/registry.py)) — every tool declared once with its metadata; the LangGraph agent, the MCP server, and the policy gate all consume the same source of truth. Policy itself lives in `catalog.yaml` — **policy as data, not code**.
+- 🔒 **A sanitizing public-mirror pipeline** — the private repo is scrubbed and secret-scanned before every push to the public mirror. The scanner has already **caught a real `.env.bak` before it went public** — security tooling that earned its keep.
+- 🛡️ **Resilience upgrades** — an LLM fallback chain (if the primary local model is unavailable, the agent degrades gracefully instead of dying) and **memory-before-prune**: conversation history is distilled into RAG-searchable notes before checkpoint retention deletes it.
+- **Still 100% local** — one model served by LM Studio (OpenAI-compatible) powers the agent loop *and* every helper at **€0** marginal cost, with runtime `/model` switching guarded by a probe-before-switch check; every run traced in **self-hosted Langfuse**; every systemd unit pages me on failure via `OnFailure=` hooks.
 
 **Related repositories**
 | Repo | What |
@@ -73,7 +77,7 @@ whole stack:
 
 | # | Project | Stack | Highlights |
 |:--:|---------|-------|-----------|
-| **1** | [AI Agents](#1-ai-agents) | Python · LangGraph · local LLM | **HomelabSentinel** — agentic SRE with a human-approval gate, 100% local inference, Langfuse tracing |
+| **1** | [AI Agents](#1-ai-agents) | Python · LangGraph · MCP · local LLM | **HomelabSentinel** — agentic SRE with a human-approval gate, an MCP server, a golden eval harness + CI, 100% local inference, Langfuse tracing |
 | **2** | [AI Homelab Infrastructure](#2-ai-homelab-infrastructure) | Proxmox · LXC · LM Studio | Self-hosted OpenAI-compatible LLM serving — the platform every agent runs on |
 | **3** | [Docker Self-Hosted Stack](#3-docker-self-hosted-stack) | Debian · 26 containers | Immich ML, n8n, Vaultwarden, Open WebUI — zero cloud |
 | **4** | [PCB Design](#4-pcb-design) | KiCad | CM5 carrier (Hailo-8, M.2) + mains-rated relay controller |
@@ -108,17 +112,22 @@ flowchart TD
         CP[("💾 SQLite<br/>checkpoints")]
     end
 
+    MCP["🌐 sentinel-mcp · MCP server<br/>streamable HTTP + bearer auth<br/>server-side approval gate"]
+    EXT["🤝 External AI clients<br/>Claude Code · Claude Desktop · other agents"]
     LLM["🏠 Local LLM · LM Studio<br/>OpenAI-compatible · runtime /model switch<br/>agent loop + all helpers · €0"]
     OBS[("📊 Langfuse<br/>self-hosted traces")]
-    TL["🧰 Tool layer<br/>Proxmox · Home Assistant · Portainer · SMART · Speedtest<br/>Commute (MVG) · Finance (Firefly III) · BM25 RAG"]
+    REG["🧰 registry.py — 29 tools, declared once<br/>Proxmox · Home Assistant · Portainer · SMART · Speedtest<br/>Commute (MVG) · Finance (Firefly III) · BM25 RAG"]
     CAT[/"📄 catalog.yaml<br/>policy as data"/]
     HUMAN["🙋 Me — Approve / Deny"]
 
     FE --> BR
+    EXT --> MCP
     BR --> LLM
     BR <-->|"interrupt() gate"| HUMAN
-    BR --> TL
-    TL -. reads inventory .-> CAT
+    MCP <-->|"same gate, server-side"| HUMAN
+    BR --> REG
+    MCP --> REG
+    REG -. reads inventory .-> CAT
     BR -. persists .-> CP
     BR -. traces .-> OBS
 ```
@@ -142,9 +151,11 @@ flowchart TD
 - 🏠 **100% local LLM** — one model (LM Studio, OpenAI-compatible) powers the agent loop *and* every helper at **€0 marginal cost**; runtime `/model` switching with a probe-before-switch that refuses any model the server can't actually run.
 - 📊 **Observability** — every run, tool call, and token count lands in **self-hosted Langfuse**; traces stay home.
 - 🚨 **The watcher is watched** — `OnFailure=` Telegram pager on every systemd unit + nightly checkpoint-DB retention (learned the hard way at 274 MB). Every monitor has a deterministic fallback, so it **never goes silent** if the LLM is down.
+- 🌐 **MCP server (`sentinel-mcp`)** — the same 29-tool registry is served to any MCP client (Claude Code / Desktop, other agents) over streamable HTTP + bearer auth, with the approval gate enforced **server-side**: an external AI's destructive call still needs my tap on Telegram, default-deny on timeout.
+- 🧪 **Evaluated, not vibed** — a 12-scenario golden eval harness scores tool selection and answers on every change, plus **40+ pytest tests on GitHub Actions CI**. The evals caught a quantization-induced tool-ordering regression that manual testing missed.
 - 🔌 **Production surface** — Telegram bot, Alexa voice bridge (read-only *by construction*), BM25 RAG over my runbooks, and **8 systemd timers**: reachability, Docker, SMART, WAN speed, backups, energy, an **MVG commute guard**, and a **finance bridge** into Firefly III.
 - 📈 **Built in five explicit versions** — `agent_v1` (raw ReAct loop, zero frameworks) → `agent_v5` (approval gate + SQLite checkpointer + token economy), now archived in [`legacy/` ↗](https://github.com/naveen6gowda/AI-Agent/tree/main/Agent_AI/legacy) with a file-by-file teaching guide.
-- 📐 **Where it's going** — an honest [architecture review + phased roadmap ↗](https://github.com/naveen6gowda/AI-Agent/blob/main/Agent_AI/docs/ARCHITECTURE.md): one tool registry → an MCP server → a scripted evaluation harness.
+- 📐 **Roadmap: shipped** — the honest [architecture review ↗](https://github.com/naveen6gowda/AI-Agent/blob/main/Agent_AI/docs/ARCHITECTURE.md) laid out three phases — one tool registry → an MCP server → a scripted eval harness — and **all three are now in production**, plus a sanitizing mirror pipeline that secret-scans every public push (it caught a real `.env.bak`).
 
 👉 **Full source, the complete architecture, and a file-by-file teaching guide:**
 **[github.com/naveen6gowda/AI-Agent ↗](https://github.com/naveen6gowda/AI-Agent)**
@@ -297,11 +308,15 @@ flowchart LR
 | Skill | Evidence |
 |-------|----------|
 | **AI-agent architectures** | **HomelabSentinel** — LangGraph agent with a human-in-the-loop `interrupt()` approval gate over Proxmox + HA + Docker — [full code ↗](https://github.com/naveen6gowda/AI-Agent) |
+| **MCP (Model Context Protocol)** | **`sentinel-mcp`** — production MCP server exposing a 29-tool registry over streamable HTTP + bearer auth, with **server-side human-approval enforcement** (default-deny) — [`mcp_server.py` ↗](https://github.com/naveen6gowda/AI-Agent/blob/main/Agent_AI/mcp_server.py) |
+| **Agent evaluation** | 12-scenario golden eval harness scoring tool selection + answers; caught a real quantization regression, tracked as `known_fail` — [`evals/` ↗](https://github.com/naveen6gowda/AI-Agent/tree/main/Agent_AI/evals) |
+| **Testing & CI** | 40+ pytest tests (policy gate, MCP auth, clients) green on GitHub Actions on every push — [`tests/` ↗](https://github.com/naveen6gowda/AI-Agent/tree/main/Agent_AI/tests) |
 | **LLM application development** | LangChain & LangGraph chains, structured output, LCEL, ReAct agents — [`ai/`](./ai/) |
 | **Local LLM serving** | LM Studio (OpenAI-compatible + bearer auth) as the single inference target; runtime model switching with probe-before-switch; earlier generations on llama.cpp (Vulkan iGPU) and Ollama |
 | **LLM observability** | Self-hosted **Langfuse** — every agent run, tool call, and token count traced, on-prem |
 | **Agent reliability engineering** | `OnFailure=` failure pagers on every unit, nightly checkpoint retention, default-deny approval gates, deterministic monitor fallbacks — the agent never fails silently |
-| **RAG** | BM25 lexical retrieval over operational runbooks, fully offline — [in AI-Agent ↗](https://github.com/naveen6gowda/AI-Agent) |
+| **RAG** | BM25 lexical retrieval over operational runbooks, fully offline; conversation memory distilled into RAG before checkpoint pruning — [in AI-Agent ↗](https://github.com/naveen6gowda/AI-Agent) |
+| **Secure open-sourcing** | Private repo → sanitizing pipeline (scrub + secret scan) → public mirror; the scanner caught a real `.env.bak` before it went public |
 | **Structured LLM output** | Pydantic-typed responses, validation, enum constraints — [`ai/structure_io.py`](./ai/structure_io.py) |
 | **PCB design (KiCad)** | CM5 carrier (extended w/ ESP32-C6 Zigbee/Thread), mains-rated relay controller — schematic to production — [`pcb/`](./pcb/) |
 | **ESP32 firmware (ESPHome / C++)** | 9 production devices — deep sleep, ADC, I2C, SPI, UART, I2S — [`esphome/`](./esphome/) |

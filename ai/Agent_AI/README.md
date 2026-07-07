@@ -11,8 +11,11 @@ changes anything. 100% local inference.*
 [![Full source](https://img.shields.io/badge/Full_source-AI--Agent-181717?logo=github)](https://github.com/naveen6gowda/AI-Agent)
 ![Python](https://img.shields.io/badge/Python-3.14-3776AB?logo=python&logoColor=white)
 ![LangGraph](https://img.shields.io/badge/LangGraph-1.x-1C3C3C?logo=langchain&logoColor=white)
+![MCP](https://img.shields.io/badge/MCP-server_·_streamable_HTTP-6E56CF)
 ![Local LLM](https://img.shields.io/badge/LLM-100%25_local_·_LM_Studio-FF6B35)
 ![Langfuse](https://img.shields.io/badge/Langfuse-self--hosted-7C3AED)
+![Evals](https://img.shields.io/badge/Evals-12_scenarios-2DA44E)
+![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?logo=githubactions&logoColor=white)
 ![Status](https://img.shields.io/badge/status-running_24%2F7-success)
 
 </div>
@@ -81,7 +84,10 @@ flowchart TD
 | 🧱 **Defense in depth** | 8 independent safety layers, from catalog policy (`restart_policy: never`) to per-action auth boundaries. |
 | 🚨 **The watcher is watched** | Every systemd unit carries an `OnFailure=` hook that pages me on Telegram with the journal tail; a nightly retention job prunes the checkpoint DB (a lesson learned at **274 MB**). |
 | 🔌 **One brain, three front-ends** | CLI, Telegram bot, Alexa voice — via a dependency-injected approval function. Voice is **read-only by construction**. |
-| 🔎 **Local RAG** | BM25 lexical search over my markdown runbooks answers *"how do I…"* fully offline. |
+| 🌐 **MCP server** | **`sentinel-mcp`** serves the agent's whole 29-tool registry to any MCP client (Claude Code / Desktop, other agents) over **streamable HTTP + bearer auth**. The approval gate is enforced **server-side** — an external AI's destructive call still lands as an Approve/Deny card on my phone, default-deny on timeout. |
+| 🧪 **Agent evals** | A **12-scenario golden harness** replays real ops questions and scores tool selection + answers. It caught an over-quantized model variant degrading tool-call ordering — tracked as an explicit `known_fail`. |
+| ✅ **Tests + CI** | **40+ pytest tests** (policy gate, MCP auth, tool clients) run on GitHub Actions on every push — including a regression test for a default-deny bug the suite itself found. |
+| 🔎 **Local RAG** | BM25 lexical search over my markdown runbooks answers *"how do I…"* fully offline — and conversation memory is distilled into RAG notes **before** checkpoint retention prunes it. |
 | 📡 **Headless monitoring** | **8 `systemd` timers** — reachability, Docker, SMART, WAN speed, backups, energy, an **MVG commute guard** (departures → Alexa), and nightly DB maintenance — plus a **finance bridge** that turns bank-app notifications into Firefly III draft transactions. Alerts only when something is wrong. |
 
 ---
@@ -152,22 +158,30 @@ exact same graph, just with an approval function that always denies — so it's
 
 ---
 
-## 📐 Where it's going
+## 📐 The roadmap — planned in the open, then shipped
 
 [`docs/ARCHITECTURE.md` ↗](https://github.com/naveen6gowda/AI-Agent/blob/main/Agent_AI/docs/ARCHITECTURE.md)
-is an honest review of the current architecture (including what's wrong with it)
-and a phased roadmap: **one tool registry** (every tool declared once, with
-metadata) → a **`sentinel-mcp` MCP server** so any client can consume the same
-tools → a **scripted evaluation harness** for the agent's decisions.
+started as an honest review of the architecture (including what was wrong with
+it) and a phased roadmap. **Every phase is now in production:**
+
+| Phase | Shipped |
+|---|---|
+| 🧰 One tool registry | [`registry.py` ↗](https://github.com/naveen6gowda/AI-Agent/blob/main/Agent_AI/registry.py) — 29 tools declared once; agent, MCP server, and policy gate share one source of truth |
+| 🌐 `sentinel-mcp` MCP server | [`mcp_server.py` ↗](https://github.com/naveen6gowda/AI-Agent/blob/main/Agent_AI/mcp_server.py) — streamable HTTP + bearer auth, **server-side approval enforcement** |
+| 🧪 Evaluation harness | [`evals/` ↗](https://github.com/naveen6gowda/AI-Agent/tree/main/Agent_AI/evals) — 12 golden scenarios; already caught a quantization regression (`known_fail`) |
+| ✅ Tests + CI | [`tests/` ↗](https://github.com/naveen6gowda/AI-Agent/tree/main/Agent_AI/tests) — 40+ pytest tests on GitHub Actions |
+| 🔒 Sanitizing public mirror | Private repo → scrub + secret scan → public mirror; caught a real `.env.bak` pre-publish |
+| 🛡️ Resilience | LLM fallback chain + memory-before-prune (history → RAG before retention deletes it) |
 
 ---
 
 ## 🛠️ Tech stack
 
-`Python 3.14` · `LangGraph` · `LangChain` · **local LLM via LM Studio**
-(OpenAI-compatible, runtime model switching) · **Langfuse** (self-hosted) ·
-`FastAPI` · `Pydantic v2` · SQLite checkpointer · `systemd` · Proxmox API ·
-Home Assistant API · Portainer · Telegram Bot API · Firefly III · BM25 RAG
+`Python 3.14` · `LangGraph` · `LangChain` · **MCP (streamable HTTP)** ·
+**local LLM via LM Studio** (OpenAI-compatible, runtime model switching) ·
+**Langfuse** (self-hosted) · `FastAPI` · `Pydantic v2` · SQLite checkpointer ·
+`pytest` + GitHub Actions CI · `systemd` · Proxmox API · Home Assistant API ·
+Portainer · Telegram Bot API · Firefly III · BM25 RAG
 
 ---
 

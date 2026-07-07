@@ -1,6 +1,6 @@
 # AI / LLM Application Development
 
-> **LangChain · LangGraph · Anthropic SDK · Pydantic · AI Agents · Tool Use · Structured Output · Local LLM Inference (LM Studio / OpenAI-compatible)**
+> **LangChain · LangGraph · MCP · Anthropic SDK · Pydantic · AI Agents · Tool Use · Structured Output · Local LLM Inference (LM Studio / OpenAI-compatible)**
 
 Hands-on Python work on **LLM application development** — from the simplest "prompt → LLM → output" chain to a **graph-based, tool-using SRE agent** that operates my homelab.
 
@@ -27,6 +27,8 @@ Each file is a self-contained, runnable example.
 | LLM provider (production) | **100% local** — one model served by **LM Studio** (OpenAI-compatible, bearer-token auth) powers HomelabSentinel and every helper. See [`AI-Agent` ↗](https://github.com/naveen6gowda/AI-Agent). |
 | App framework | **LangChain** (chains, structured output, LCEL) + **LangGraph** (stateful agents) |
 | Observability | **Langfuse** (self-hosted) — agent runs, tool calls, token accounting |
+| Tool serving | **MCP** — `sentinel-mcp` serves the agent's 29-tool registry to any MCP client over streamable HTTP + bearer auth, approval gate enforced server-side. See [`AI-Agent` ↗](https://github.com/naveen6gowda/AI-Agent). |
+| Quality | **12-scenario golden eval harness** + **40+ pytest tests** on GitHub Actions CI |
 | Validation | **Pydantic v2** (typed structured output, schema-constrained generation) |
 | Config | `python-dotenv` (API key via `.env`, never committed) |
 | Data / analytics | `requests` · `pandas` · `matplotlib` |
