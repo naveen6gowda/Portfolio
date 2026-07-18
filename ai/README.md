@@ -14,6 +14,7 @@ This is the layer above local inference: chains, structured output, tool use, an
 - **Both halves of LangGraph** — the prebuilt `create_react_agent` shortcut **and** a hand-built `StateGraph` with `ToolNode` + `tools_condition`, so the abstraction isn't a black box.
 - **Both halves of tool use** — LangChain's `@tool` decorator **and** the raw Anthropic Messages API tool loop with `tool_use` / `tool_result` blocks.
 - **Typed, validated LLM output** with Pydantic — including range/enum constraints — instead of brittle string parsing.
+- **Model fine-tuning, not just model use** — [`finetuning/`](./finetuning/) documents a QLoRA fine-tune of Qwen3.5-9B and a full-parameter fine-tune of Qwen3.5-2B on a 24 GB MacBook (MLX), trained on a 1,600-pair self-curated dataset and deployed back into the LM Studio serving endpoint.
 
 Each file is a self-contained, runnable example.
 
@@ -29,6 +30,7 @@ Each file is a self-contained, runnable example.
 | Observability | **Langfuse** (self-hosted) — agent runs, tool calls, token accounting |
 | Tool serving | **MCP** — `sentinel-mcp` serves the agent's 29-tool registry to any MCP client over streamable HTTP + bearer auth, approval gate enforced server-side. See [`AI-Agent` ↗](https://github.com/naveen6gowda/AI-Agent). |
 | Quality | **12-scenario golden eval harness** + **40+ pytest tests** on GitHub Actions CI |
+| Fine-tuning | **MLX / `mlx-lm`** — Qwen3.5-9B QLoRA + Qwen3.5-2B full fine-tune on Apple silicon, fused & served via LM Studio. See [`finetuning/`](./finetuning/). |
 | Validation | **Pydantic v2** (typed structured output, schema-constrained generation) |
 | Config | `python-dotenv` (API key via `.env`, never committed) |
 | Data / analytics | `requests` · `pandas` · `matplotlib` |

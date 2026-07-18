@@ -38,6 +38,7 @@ real-world use — not a tutorial follow-along.
 
 The flagship agent, **[HomelabSentinel ↗](https://github.com/naveen6gowda/AI-Agent)**, just completed its **entire architecture roadmap** — every phase from the honest architecture review is now shipped and running in production:
 
+- 🧬 **LLM fine-tuning, end to end and 100% local** *(newest)* — built a **1,600-pair bilingual instruction dataset** from my own infrastructure docs, then ran **two training regimes** on a 24 GB MacBook with MLX: a **QLoRA fine-tune of Qwen3.5-9B** (rank-8 adapters on a 4-bit base) and a **full-parameter fine-tune of Qwen3.5-2B** (bf16, gradient checkpointing). The fused model (`qwen3.5-9b-navi-lora`) is deployed into the same LM Studio service that powers the agents. Full writeup: [`ai/finetuning/`](./ai/finetuning/).
 - 🌐 **`sentinel-mcp` — a production MCP server.** The agent's whole tool registry (29 tools) is now served to any MCP client — Claude Code, Claude Desktop, other agents — over **streamable HTTP with bearer auth**. The human-approval gate is enforced **server-side**: a destructive call from an external AI still lands as an Approve/Deny card on my phone, **default-deny on timeout**. External models get the same safety rails I do.
 - 🧪 **A scripted evaluation harness** — 12 golden scenarios replay real operational questions against the live agent and score tool selection + final answers. It has already paid for itself: it caught an over-quantized model variant silently degrading tool-call ordering — now tracked as an explicit `known_fail` with the analysis written down. **Evals as regression tests for agent behavior.**
 - ✅ **A real test suite + CI** — 40+ pytest tests (policy gate, MCP auth, tool clients, eval plumbing), including a regression test for a default-deny bug the suite itself surfaced. Green on GitHub Actions on every push.
@@ -78,6 +79,7 @@ whole stack:
 | # | Project | Stack | Highlights |
 |:--:|---------|-------|-----------|
 | **1** | [AI Agents](#1-ai-agents) | Python · LangGraph · MCP · local LLM | **HomelabSentinel** — agentic SRE with a human-approval gate, an MCP server, a golden eval harness + CI, 100% local inference, Langfuse tracing |
+| **1b** | [LLM Fine-Tuning](./ai/finetuning/) | MLX · mlx-lm · LoRA/QLoRA · full FT | Qwen3.5-9B QLoRA + Qwen3.5-2B full fine-tune on a 24 GB MacBook, 1,600-pair self-curated dataset, fused model deployed to LM Studio |
 | **2** | [AI Homelab Infrastructure](#2-ai-homelab-infrastructure) | Proxmox · LXC · LM Studio | Self-hosted OpenAI-compatible LLM serving — the platform every agent runs on |
 | **3** | [Docker Self-Hosted Stack](#3-docker-self-hosted-stack) | Debian · 26 containers | Immich ML, n8n, Vaultwarden, Open WebUI — zero cloud |
 | **4** | [PCB Design](#4-pcb-design) | KiCad | CM5 carrier (Hailo-8, M.2) + mains-rated relay controller |
@@ -169,6 +171,16 @@ flowchart TD
 - **Real-data analytics** — Open-Meteo weather pull → pandas DataFrame → matplotlib chart
 
 **Stack:** Python · LangChain · LangGraph · Anthropic SDK · Pydantic · `python-dotenv` · pandas · matplotlib · **LM Studio** (current local inference target, OpenAI-compatible) · llama.cpp and Ollama (earlier generations)
+
+### 🧬 LLM Fine-Tuning — LoRA/QLoRA + full fine-tune, 100% local ([`ai/finetuning/`](./ai/finetuning/))
+
+Beyond *using* models: **training them**. On a 24 GB MacBook with MLX / `mlx-lm`, I fine-tuned Qwen3.5 to answer questions about my own infrastructure the way I would:
+
+- **Dataset engineering first** — 1,600 self-curated instruction pairs across 20 topic domains (bilingual EN/DE, deliberate paraphrase variety for generalization), verified secret-free by an automated scan, with a disciplined 1,440/160 train/val split plus a held-out test set to catch catastrophic forgetting.
+- **Two regimes on the same data** — a **QLoRA fine-tune of Qwen3.5-9B** (rank-8 adapters on a 4-bit base, 13 of 32 blocks) and a **full-parameter fine-tune of Qwen3.5-2B** (bf16, 16 of 24 blocks unfrozen, gradient checkpointing) — chosen from the actual memory math of 24 GB unified memory.
+- **Deployed, not left in a notebook** — the adapter was fused into a standalone model (`qwen3.5-9b-navi-lora`) and serves from the same OpenAI-compatible LM Studio endpoint the production agents use.
+
+👉 Full writeup with pipeline diagram and configs: [`ai/finetuning/`](./ai/finetuning/)
 
 ---
 
@@ -312,6 +324,8 @@ flowchart LR
 | **Agent evaluation** | 12-scenario golden eval harness scoring tool selection + answers; caught a real quantization regression, tracked as `known_fail` — [`evals/` ↗](https://github.com/naveen6gowda/AI-Agent/tree/main/Agent_AI/evals) |
 | **Testing & CI** | 40+ pytest tests (policy gate, MCP auth, clients) green on GitHub Actions on every push — [`tests/` ↗](https://github.com/naveen6gowda/AI-Agent/tree/main/Agent_AI/tests) |
 | **LLM application development** | LangChain & LangGraph chains, structured output, LCEL, ReAct agents — [`ai/`](./ai/) |
+| **LLM fine-tuning (LoRA/QLoRA + full-parameter)** | Qwen3.5-9B QLoRA (rank 8, 4-bit base) **and** Qwen3.5-2B full fine-tune (bf16, gradient checkpointing) with MLX on a 24 GB MacBook; fused model deployed to the LM Studio serving endpoint — [`ai/finetuning/`](./ai/finetuning/) |
+| **Training-data engineering** | 1,600-pair bilingual instruction dataset built from my own docs — 20 topic domains, paraphrase variety, automated secret-scan verification, train/val/held-out-test hygiene — [`ai/finetuning/`](./ai/finetuning/) |
 | **Local LLM serving** | LM Studio (OpenAI-compatible + bearer auth) as the single inference target; runtime model switching with probe-before-switch; earlier generations on llama.cpp (Vulkan iGPU) and Ollama |
 | **LLM observability** | Self-hosted **Langfuse** — every agent run, tool call, and token count traced, on-prem |
 | **Agent reliability engineering** | `OnFailure=` failure pagers on every unit, nightly checkpoint retention, default-deny approval gates, deterministic monitor fallbacks — the agent never fails silently |
@@ -337,6 +351,7 @@ Portfolio/
 │   ├── README.md
 │   ├── LCEL.py · structure_io.py · tools.py · custom_langraph.py · …
 │   ├── ollama-lxc-setup.md
+│   ├── finetuning/           ← Qwen3.5 LoRA/QLoRA + full fine-tune writeup (MLX)
 │   └── Agent_AI/             ← HomelabSentinel showcase (full code → AI-Agent)
 ├── homelab/                  ← infrastructure docs
 │   └── infrastructure.md
