@@ -35,7 +35,7 @@ The 2B run used MLX-LM's `--fine-tune-type full` mode with only selected layers 
 ## Workflow
 
 ```mermaid
-flowchart LR
+flowchart TD
     D[Infrastructure notes] --> P[Draft and review instruction pairs]
     P --> S[Seeded train / validation split]
     S --> L[9B: LoRA on 4-bit base]
