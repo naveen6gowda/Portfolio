@@ -25,7 +25,8 @@ flowchart TD
     P -->|Read operation| T[Shared tool registry]
     P -->|Destructive operation| H[Interrupt: approve or deny]
     H --> G[Gate checks decision]
-    G --> T
+    G -->|Approved| T
+    G -->|Denied: refusal result| A
     T --> I[Proxmox / Docker / Home Assistant]
     T --> A
     A --- C[SQLite checkpoints]
