@@ -1,84 +1,57 @@
-# Homelab Infrastructure
+[← Portfolio](../README.md) · [Docker services](../docker/README.md) · [Embedded devices](../esphome/README.md)
 
-## Overview
+# Homelab infrastructure
 
-A production home network built on enterprise-grade open-source tools, running 24/7 on a mini-PC.
+**A personal environment for operating AI applications, services, and connected devices.**
 
-## Hardware
+I configured the virtualization, networking, service deployment, and Home Assistant integrations that support these projects. This page records the portfolio architecture; it is not a live inventory or uptime dashboard.
 
-| Component | Details |
-|-----------|---------|
-| Host machine | x86 mini-PC, 4-core CPU, 16GB RAM, SSD |
-| Hypervisor | Proxmox VE (bare metal) |
-| Router/Firewall | OPNsense (separate device) |
-| IoT devices | 9× ESP32 nodes (various models) |
+## Architecture
 
-## Proxmox Virtual Machines & Containers
-
-### Home Assistant OS (HAOS) VM
-
-- **Network:** VLAN-segmented HA subnet (static IP)
-- **Purpose:** Central home automation hub
-- **Add-ons running:**
-  - ESPHome — manages all ESP32 firmware OTA
-  - MQTT Broker (Mosquitto)
-  - Advanced SSH & Web Terminal
-- **Integrations:** 50+ entities from ESP32 sensors, relay switches, weather
-
-### Agent LXCs (Agentic AI platforms)
-
-- **Sentinel LXC** (unprivileged) — runs **HomelabSentinel**, the LangGraph SRE
-  agent with its Telegram bot, Alexa bridge, and 8 systemd monitor timers.
-  Full source: [AI-Agent ↗](https://github.com/naveen6gowda/AI-Agent)
-- **Hermes Agent container** — a second agent platform: web dashboard, Telegram,
-  sandboxed Python execution, scheduled jobs
-- Both consume the same local LLM endpoint below
-
-### Local AI Inference — three generations
-
-- **Gen 1 — Ollama LXC** (Ubuntu, management VLAN, iGPU passthrough via
-  `/dev/dri/renderD128`)
-- **Gen 2 — llama.cpp** (Vulkan) on the same LXC
-- **Gen 3 (current) — LM Studio** on an Apple-silicon node, serving
-  **Qwen3.6-35B-A3B (MoE)** through an OpenAI-compatible API with bearer-token
-  auth — one model, every agent in the lab
-- **Purpose:** self-hosted LLM inference — no cloud, no API costs, no prompt
-  leaves the network
-
-## Network Architecture
-
-```
-Internet
-    │
-OPNsense Firewall / Router
-    │
-    ├── VLAN: Management
-    │   ├── Proxmox host
-    │   ├── Sentinel LXC (HomelabSentinel agent)
-    │   ├── Hermes Agent container
-    │   └── LM Studio inference node (Apple silicon)
-    │
-    ├── VLAN: Home Assistant
-    │   └── HA VM (HAOS)
-    │
-    └── VLAN: IoT Devices (isolated)
-        ├── Mailbox sensor
-        ├── Plant moisture monitor
-        ├── Hall clock
-        └── ... (all 9 ESP32 nodes)
+```mermaid
+flowchart TD
+    WAN[Internet] --> FW[OPNsense firewall]
+    FW --> LAN[Segmented LAN / VLANs]
+    LAN --> P[Proxmox x86 host]
+    P --> HA[Home Assistant OS VM]
+    P --> D[Debian VM: Docker services]
+    P --> S[Unprivileged LXC: Sentinel]
+    LAN --> L[Apple Silicon: LM Studio]
+    S --> L
+    S --> HA
+    S --> D
+    LAN --> I[ESP32 devices]
+    I -->|MQTT / ESPHome API| HA
+    T[Tailscale remote access] --- LAN
 ```
 
-## Remote Access
+## Components and responsibility
 
-- **Tailscale VPN** — secure remote access to all services without port forwarding
-- **No exposed ports** to the internet
+| Component | Role in the projects |
+|---|---|
+| Proxmox on an x86 mini PC | VM and LXC provisioning; documented host configuration: four CPU cores and 16 GB RAM |
+| OPNsense and VLANs | Routing, firewall rules, and separation of infrastructure and IoT networks |
+| Home Assistant OS | Device entities, automations, dashboards, and voice integration |
+| Debian Docker VM | Application services, persistent volumes, service logs, and backup tooling |
+| Sentinel LXC | Python agent, scheduled monitoring, failure alerts, and infrastructure clients |
+| Apple Silicon inference node | LM Studio serving through an OpenAI-compatible API |
+| Tailscale | Remote access without requiring inbound port forwarding for those connections |
+| ESP32 devices | Sensors, displays, MQTT telemetry, and Home Assistant API integration |
 
-## Key Design Decisions
+## Inference evolution
 
-- **VLAN segmentation** — IoT devices cannot reach management network; HA is the only bridge
-- **Local-first** — LLM inference (LM Studio), the agents, MQTT broker, and ESPHome all run locally; no cloud dependencies
-- **MQTT over native API** for battery devices — fire-and-forget avoids HA API reconnect delays during short wake windows
+1. **Ollama:** initial model management and local inference, alongside an OpenClaw deployment.
+2. **llama.cpp / Vulkan:** direct GGUF configuration and iGPU acceleration in LXC; experimentation with Hermes Agent as a separately developed agent framework.
+3. **LM Studio / Apple Silicon:** a later serving configuration shared by Sentinel and other clients. The July 2026 project notes used a Qwen3.6-35B MoE model; model selection is configurable and may change.
 
----
+[Earlier LXC configuration and design decisions](../ai/ollama-lxc-setup.md)
 
-*This infrastructure was designed and deployed with AI assistance.*
+## Operations and automation
+
+The work includes systemd-based monitoring, internet-speed checks, service-failure notifications, Langfuse tracing, and deterministic fallbacks when an LLM is unavailable. n8n workflows support a daily AI news briefing and Telegram assistance. These workflows are described as project experience; their private workflow exports are not included here.
+
+For application layout and configuration prerequisites, see the [24-service Compose reference](../docker/README.md). For sensors and voice interfaces, see the [nine ESPHome configurations](../esphome/README.md).
+
+## Data and deployment boundaries
+
+Local inference and self-hosted storage provide control over where those parts run. Telegram, Alexa, external data APIs, and optional cloud model providers still have their own network and data flows. Performance depends on model size, quantization, hardware, and load; this portfolio does not claim zero latency, zero operating cost, or fully offline operation for every integration.

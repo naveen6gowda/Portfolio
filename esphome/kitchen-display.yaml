@@ -418,9 +418,9 @@ display:
       // ============ LEFT COLUMN ============
       // Temperature - with NaN protection
       if (!std::isnan(id(bme_temp).state)) {
-        it.printf(0, 17, id(font_medium), "Temp: %.1fÂ°C", id(bme_temp).state);
+        it.printf(0, 17, id(font_medium), "Temp: %.1f°C", id(bme_temp).state);
       } else {
-        it.print(0, 17, id(font_medium), "Temp: --.-Â°C");
+        it.print(0, 17, id(font_medium), "Temp: --.-°C");
       }
 
       // Filter Days - simplified without CHANGE warning

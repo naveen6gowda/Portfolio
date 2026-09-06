@@ -258,9 +258,9 @@ display:
       // Outdoor data with fallbacks
       it.print(14, 60, id(font_small), "Outdoor:");
       if (id(outdoor_temp).has_state()) {
-        it.printf(76, 75, id(font_medium), "%.1fÂ°C", id(outdoor_temp).state);
+        it.printf(76, 75, id(font_medium), "%.1f°C", id(outdoor_temp).state);
       } else {
-        it.print(76, 75, id(font_small), "--Â°C");
+        it.print(76, 75, id(font_small), "--°C");
       }
       
       if (id(outdoor_humidity).has_state()) {
@@ -275,9 +275,9 @@ display:
       // Indoor data with fallbacks
       it.print(160, 60, id(font_small), "Indoor:");
       if (id(indoor_temp).has_state()) {
-        it.printf(178, 75, id(font_medium), "%.1fÂ°C", id(indoor_temp).state);
+        it.printf(178, 75, id(font_medium), "%.1f°C", id(indoor_temp).state);
       } else {
-        it.print(178, 75, id(font_small), "--Â°C");
+        it.print(178, 75, id(font_small), "--°C");
       }
       
       if (id(indoor_humidity).has_state()) {

@@ -1,70 +1,30 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 340" width="1280" height="340" role="img" aria-label="Naveen Kumar — Agentic AI, MCP and Local LLM Infrastructure, Embedded Systems">
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="400" viewBox="0 0 1280 400" role="img" aria-labelledby="title description">
+  <title id="title">Naveen Kumar — AI and embedded engineering</title>
+  <desc id="description">AI agents, local LLMs, and automotive embedded software. Based in Germany, with more than eleven years of automotive experience.</desc>
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#0b1220"/>
-      <stop offset="0.55" stop-color="#0f2336"/>
-      <stop offset="1" stop-color="#0a2e2a"/>
-    </linearGradient>
-    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#38bdf8"/>
-      <stop offset="1" stop-color="#a78bfa"/>
-    </linearGradient>
+    <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#101c31"/><stop offset="1" stop-color="#0b353d"/></linearGradient>
+    <linearGradient id="accent"><stop stop-color="#6ee7cf"/><stop offset="1" stop-color="#7bb6ff"/></linearGradient>
   </defs>
-
-  <rect width="1280" height="340" fill="url(#bg)"/>
-
-  <!-- subtle circuit traces -->
-  <g stroke="#1e3a5f" stroke-width="2" fill="none" opacity="0.55">
-    <path d="M0 70 H280 V36 H470"/>
-    <path d="M1280 270 H1000 V304 H820"/>
-    <path d="M1130 70 H960 V130"/>
-    <path d="M60 250 H210 V210"/>
-  </g>
-  <g fill="#38bdf8" opacity="0.7">
-    <circle cx="470" cy="36" r="4.5"/>
-    <circle cx="820" cy="304" r="4.5"/>
-    <circle cx="960" cy="130" r="4.5"/>
-    <circle cx="210" cy="210" r="4.5"/>
-  </g>
-
-  <!-- agent-graph motif (top right) -->
-  <g opacity="0.9">
-    <line x1="1080" y1="120" x2="1160" y2="80"  stroke="url(#accent)" stroke-width="3"/>
-    <line x1="1080" y1="120" x2="1160" y2="170" stroke="url(#accent)" stroke-width="3"/>
-    <line x1="1160" y1="80"  x2="1160" y2="170" stroke="url(#accent)" stroke-width="3"/>
-    <circle cx="1080" cy="120" r="16" fill="#0b1220" stroke="#38bdf8" stroke-width="3"/>
-    <circle cx="1160" cy="80"  r="13" fill="#0b1220" stroke="#a78bfa" stroke-width="3"/>
-    <circle cx="1160" cy="170" r="13" fill="#0b1220" stroke="#a78bfa" stroke-width="3"/>
-  </g>
-
-  <!-- accent bar -->
-  <rect x="80" y="92" width="6" height="150" rx="3" fill="url(#accent)"/>
-
-  <!-- title + subtitle -->
-  <text x="112" y="152" font-family="'Segoe UI',Helvetica,Arial,sans-serif" font-size="66" font-weight="700" fill="#f8fafc">Naveen Kumar</text>
-  <text x="114" y="198" font-family="'Segoe UI',Helvetica,Arial,sans-serif" font-size="25" font-weight="400" fill="#9fb3c8">Agentic AI  ·  MCP &amp; Local LLM Infrastructure  ·  Embedded Systems</text>
-
-  <!-- tech pills -->
-  <g font-family="'Segoe UI',Helvetica,Arial,sans-serif" font-size="17" font-weight="600">
-    <rect x="113" y="232" width="116" height="34" rx="17" fill="#0e2942" stroke="#38bdf8" stroke-opacity="0.45"/>
-    <text x="171" y="255" text-anchor="middle" fill="#7dd3fc">LangGraph</text>
-
-    <rect x="239" y="232" width="76" height="34" rx="17" fill="#0e2942" stroke="#38bdf8" stroke-opacity="0.45"/>
-    <text x="277" y="255" text-anchor="middle" fill="#7dd3fc">MCP</text>
-
-    <rect x="325" y="232" width="120" height="34" rx="17" fill="#0e2942" stroke="#38bdf8" stroke-opacity="0.45"/>
-    <text x="385" y="255" text-anchor="middle" fill="#7dd3fc">Local LLM</text>
-
-    <rect x="455" y="232" width="92" height="34" rx="17" fill="#0e2942" stroke="#a78bfa" stroke-opacity="0.45"/>
-    <text x="501" y="255" text-anchor="middle" fill="#c4b5fd">ESP32</text>
-
-    <rect x="557" y="232" width="108" height="34" rx="17" fill="#0e2942" stroke="#a78bfa" stroke-opacity="0.45"/>
-    <text x="611" y="255" text-anchor="middle" fill="#c4b5fd">Proxmox</text>
-
-    <rect x="675" y="232" width="170" height="34" rx="17" fill="#0e2942" stroke="#34d399" stroke-opacity="0.45"/>
-    <text x="760" y="255" text-anchor="middle" fill="#6ee7b7">Home Assistant</text>
-
-    <rect x="855" y="232" width="84" height="34" rx="17" fill="#0e2942" stroke="#34d399" stroke-opacity="0.45"/>
-    <text x="897" y="255" text-anchor="middle" fill="#6ee7b7">KiCad</text>
+  <rect width="1280" height="400" rx="22" fill="url(#bg)"/>
+  <path d="M0 340H710L780 270H1280M910 0V52L1030 172H1280M1125 400V348L1210 263H1280" fill="none" stroke="#467f8b" stroke-opacity=".24" stroke-width="2"/>
+  <rect x="58" y="56" width="44" height="5" rx="2.5" fill="url(#accent)"/>
+  <text x="117" y="65" fill="#99d8db" font-family="Arial, sans-serif" font-size="17" letter-spacing="3">ENGINEERING PORTFOLIO</text>
+  <text x="56" y="149" fill="#f4f8ff" font-family="Arial, sans-serif" font-size="65" font-weight="700">Naveen Kumar</text>
+  <text x="60" y="202" fill="#d1e4ed" font-family="Arial, sans-serif" font-size="29">AI / LLM Engineer</text>
+  <text x="60" y="245" fill="#a7c6d2" font-family="Arial, sans-serif" font-size="20">From automotive software to practical AI systems.</text>
+  <rect x="60" y="291" width="273" height="47" rx="23.5" fill="#193d4d" stroke="#386578"/>
+  <text x="83" y="321" fill="#d6f0f3" font-family="Arial, sans-serif" font-size="18">11+ years in automotive</text>
+  <rect x="347" y="291" width="135" height="47" rx="23.5" fill="#193d4d" stroke="#386578"/>
+  <text x="375" y="321" fill="#d6f0f3" font-family="Arial, sans-serif" font-size="18">Germany</text>
+  <g font-family="Arial, sans-serif">
+    <rect x="831" y="55" width="387" height="84" rx="14" fill="#123440" stroke="#305766"/>
+    <text x="854" y="87" fill="#77e5cb" font-size="15" letter-spacing="1.5">01 / AGENTIC AI</text>
+    <text x="854" y="116" fill="#e0edf5" font-size="19">LangGraph · MCP · RAG · Evals</text>
+    <rect x="831" y="158" width="387" height="84" rx="14" fill="#123440" stroke="#305766"/>
+    <text x="854" y="190" fill="#91c4ff" font-size="15" letter-spacing="1.5">02 / MODEL ENGINEERING</text>
+    <text x="854" y="219" fill="#e0edf5" font-size="19">MLX · LoRA · Local inference</text>
+    <rect x="831" y="261" width="387" height="84" rx="14" fill="#123440" stroke="#305766"/>
+    <text x="854" y="293" fill="#77e5cb" font-size="15" letter-spacing="1.5">03 / EMBEDDED SYSTEMS</text>
+    <text x="854" y="322" fill="#e0edf5" font-size="19">Embedded C · CAN · AUTOSAR</text>
   </g>
 </svg>

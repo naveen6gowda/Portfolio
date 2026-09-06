@@ -1,195 +1,74 @@
-<div align="center">
+[← Portfolio](../../README.md) · [AI examples](../README.md)
 
-# 🛰️ HomelabSentinel
+# HomelabSentinel
 
-### An agentic-AI Site Reliability Engineer for my homelab
+**A LangGraph agent for infrastructure operations, with human approval at the tool boundary.**
 
-*Talk to your infrastructure in plain English. An LLM reasons over live
-Proxmox · Home Assistant · Docker state — and asks permission before it
-changes anything. 100% local inference.*
+Independent project · June 2025–Present · Python, LangGraph, FastAPI, Pydantic, SQLite
 
-[![Full source](https://img.shields.io/badge/Full_source-AI--Agent-181717?logo=github)](https://github.com/naveen6gowda/AI-Agent)
-![Python](https://img.shields.io/badge/Python-3.14-3776AB?logo=python&logoColor=white)
-![LangGraph](https://img.shields.io/badge/LangGraph-1.x-1C3C3C?logo=langchain&logoColor=white)
-![MCP](https://img.shields.io/badge/MCP-server_·_streamable_HTTP-6E56CF)
-![Local LLM](https://img.shields.io/badge/LLM-100%25_local_·_LM_Studio-FF6B35)
-![Langfuse](https://img.shields.io/badge/Langfuse-self--hosted-7C3AED)
-![Evals](https://img.shields.io/badge/Evals-12_scenarios-2DA44E)
-![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?logo=githubactions&logoColor=white)
-![Status](https://img.shields.io/badge/status-running_24%2F7-success)
+[Source repository](https://github.com/naveen6gowda/AI-Agent/tree/main/Agent_AI) · [Architecture](https://github.com/naveen6gowda/AI-Agent/blob/main/Agent_AI/docs/ARCHITECTURE.md) · [Tests](https://github.com/naveen6gowda/AI-Agent/tree/main/Agent_AI/tests) · [Evaluations](https://github.com/naveen6gowda/AI-Agent/tree/main/Agent_AI/evals)
 
-</div>
+## Problem and contribution
 
-> 📦 **This page is a showcase.** The complete, runnable project — all source,
-> diagrams, and a file-by-file teaching guide — lives in its own repository:
-> ### → **[github.com/naveen6gowda/AI-Agent ↗](https://github.com/naveen6gowda/AI-Agent)**
+Checking several infrastructure dashboards is repetitive, but allowing an LLM to restart services without review introduces operational risk. I built Sentinel to combine status checks and runbook context in a conversational interface, with an explicit approval step for destructive tools.
 
----
+My work covers the agent graph, infrastructure clients, shared registry, approval and checkpoint flow, MCP interface, monitoring integrations, retrieval, tracing, and evaluation. The public implementation is maintained in **AI-Agent**; this folder provides the portfolio case study.
 
-HomelabSentinel is a **production agentic-AI system** running 24/7 on an
-unprivileged Proxmox LXC. I ask it *"are my backups OK?"* or *"restart Immich"*
-over **Telegram** or **Alexa**, and it reasons with an LLM: it picks tools,
-gathers live data from Proxmox / Home Assistant / Portainer, decides whether an
-action is needed, and **stops at a human-approval gate before touching anything.**
-
-It started as a learning exercise (a raw, framework-free tool-loop) and grew into
-the real on-call agent for my homelab — engineered around two constraints every
-homelabber has: **don't let the AI break things**, and **don't ship your home to
-the cloud.** Since the July 2026 redesign, every token of inference is served by
-**one local model**, and every trace lands in **self-hosted Langfuse**.
-
----
-
-## 🏗️ Architecture
+## Architecture
 
 ```mermaid
 flowchart TD
-    subgraph FE["🚪 Front-ends"]
-        TG["📱 Telegram bot"]
-        VO["🗣️ Alexa voice"]
-        CL["⌨️ CLI"]
-    end
-
-    subgraph BR["🧠 Brain · agent_v5"]
-        LG["LangGraph<br/>agent → policy → tools loop"]
-        CP[("💾 SQLite<br/>checkpoints")]
-    end
-
-    LLM["🏠 Local LLM · LM Studio<br/>OpenAI-compatible · runtime /model switch<br/>agent loop + all helpers · €0"]
-    OBS[("📊 Langfuse<br/>self-hosted traces")]
-    TL["🧰 Tool layer<br/>Proxmox · HA · Portainer · SMART · Speedtest<br/>Commute (MVG) · Finance (Firefly III) · BM25 RAG"]
-
-    CAT[/"📄 catalog.yaml<br/>policy as data"/]
-    HUMAN["🙋 Me — Approve / Deny"]
-
-    FE --> BR
-    BR --> LLM
-    BR <-->|"interrupt() gate"| HUMAN
-    BR --> TL
-    TL -. reads inventory .-> CAT
-    BR -. persists .-> CP
-    BR -. traces .-> OBS
+    UI[Telegram / Alexa / CLI] --> A[LangGraph agent]
+    R[BM25 runbooks] --> A
+    L[Configured LLM endpoint] <--> A
+    A --> P{Tool policy}
+    P -->|Read operation| T[Shared tool registry]
+    P -->|Destructive operation| H[Interrupt: approve or deny]
+    H --> G[Gate checks decision]
+    G --> T
+    T --> I[Proxmox / Docker / Home Assistant]
+    T --> A
+    A --- C[SQLite checkpoints]
+    A --> O[Langfuse traces]
+    M[MCP client + bearer auth] --> S[MCP server + approval enforcement]
+    S --> T
 ```
 
----
+## Capabilities and evidence
 
-## ✨ What it demonstrates
-
-| Capability | How |
+| Capability | Implementation / evidence |
 |---|---|
-| 🛡️ **Human-in-the-loop safety** | A LangGraph `interrupt()` gate pauses every destructive tool call for my tap on Telegram. **Default-deny** — timeout/error/silence = no. |
-| 🏠 **100% local, cost-aware inference** | One model served by **LM Studio** (OpenAI-compatible) powers the agent loop *and* every helper. Marginal cost **€0**; runtime `/model` switching with **probe-before-switch**. |
-| 📊 **LLM observability** | Every agent run, tool call, and token count traced in **self-hosted Langfuse** — chosen over LangSmith so traces never leave home. |
-| 💾 **Durable, resumable agents** | A SQLite checkpointer persists graph state across the interrupt — approve after dinner, survive a process restart mid-decision. |
-| 🧱 **Defense in depth** | 8 independent safety layers, from catalog policy (`restart_policy: never`) to per-action auth boundaries. |
-| 🚨 **The watcher is watched** | Every systemd unit carries an `OnFailure=` hook that pages me on Telegram with the journal tail; a nightly retention job prunes the checkpoint DB (a lesson learned at **274 MB**). |
-| 🔌 **One brain, three front-ends** | CLI, Telegram bot, Alexa voice — via a dependency-injected approval function. Voice is **read-only by construction**. |
-| 🌐 **MCP server** | **`sentinel-mcp`** serves the agent's whole 29-tool registry to any MCP client (Claude Code / Desktop, other agents) over **streamable HTTP + bearer auth**. The approval gate is enforced **server-side** — an external AI's destructive call still lands as an Approve/Deny card on my phone, default-deny on timeout. |
-| 🧪 **Agent evals** | A **12-scenario golden harness** replays real ops questions and scores tool selection + answers. It caught an over-quantized model variant degrading tool-call ordering — tracked as an explicit `known_fail`. |
-| ✅ **Tests + CI** | **40+ pytest tests** (policy gate, MCP auth, tool clients) run on GitHub Actions on every push — including a regression test for a default-deny bug the suite itself found. |
-| 🔎 **Local RAG** | BM25 lexical search over my markdown runbooks answers *"how do I…"* fully offline — and conversation memory is distilled into RAG notes **before** checkpoint retention prunes it. |
-| 📡 **Headless monitoring** | **8 `systemd` timers** — reachability, Docker, SMART, WAN speed, backups, energy, an **MVG commute guard** (departures → Alexa), and nightly DB maintenance — plus a **finance bridge** that turns bank-app notifications into Firefly III draft transactions. Alerts only when something is wrong. |
+| One tool catalog | [29-tool registry](https://github.com/naveen6gowda/AI-Agent/blob/main/Agent_AI/registry.py) shared by agent, MCP, and policy logic |
+| Human approval | LangGraph interrupt/resume, default-deny decisions, per-action gating, and audit records |
+| Persistent interaction | SQLite checkpoints retain conversational state across interruptions |
+| MCP access | [Streamable HTTP server](https://github.com/naveen6gowda/AI-Agent/blob/main/Agent_AI/mcp_server.py), bearer authentication, and server-side approval checks |
+| Retrieval | BM25 runbook search and retrieval of saved operational context |
+| Observability | Self-hosted Langfuse traces for model/tool behavior and debugging |
+| Infrastructure monitoring | Service-failure alerts, internet-speed monitoring, and deterministic fallbacks when model summarization is unavailable |
+| Model handling | Configurable inference endpoints, runtime probing, and fallback handling |
+| Interfaces | Telegram interaction, Alexa voice access, and CLI operation |
+| Public release | Sanitized source mirror; private credentials and deployment data are excluded |
 
----
+## Approval design
 
-## 📈 Built as a five-step course (v1 → v5)
+The graph routes tool requests through policy before execution. Destructive actions require an explicit decision; denial is returned as a tool result so the agent can respond to it. The voice path denies destructive requests.
 
-The five `agent_v*` files solve the **same task** five times — each adds exactly
-one production concern. They're now archived in
-[`legacy/` ↗](https://github.com/naveen6gowda/AI-Agent/tree/main/Agent_AI/legacy)
-(v5 is the production agent), and they're still the clearest way I know to show
-*how an agent actually works* under the framework sugar.
+The implementation combines catalog restrictions, read-before-write checks, the interrupt gate, per-action approval, execution checks, audit logging, authentication boundaries, and bounded agent loops. Prompt instructions help guide behavior; enforcement depends on the code and deployment configuration.
 
-```mermaid
-flowchart LR
-    V1["v1 · raw ReAct<br/>a while-loop over an LLM"] --> V2["v2 · LangChain<br/>@tool hides the loop"]
-    V2 --> V3["v3 · LangGraph<br/>loop becomes editable data"]
-    V3 --> V4["v4 · observability<br/>(LangSmith then; Langfuse now)"]
-    V4 --> V5["v5 · approval gate<br/>+ checkpointer + token economy"]
-```
+## Validation and an observed limitation
 
-| Version | Adds | The lesson |
-|:--:|---|---|
-| **v1** | The bare ReAct loop (raw provider API) | An agent is a `while` loop over an LLM with tools |
-| **v2** | The `@tool` decorator + `create_agent` | The framework just *hides* the loop |
-| **v3** | An explicit `StateGraph` | The loop becomes **editable data** |
-| **v4** | Tracing (LangSmith then; **self-hosted Langfuse** in production today) | You can't operate what you can't see |
-| **v5** | **Approval gate + checkpointer + token economy** | Editable graph → insert a human gate |
+- **40+ pytest tests** cover clients, policy, MCP, evaluation mechanics, and utilities. [GitHub Actions](https://github.com/naveen6gowda/AI-Agent/blob/main/.github/workflows/ci.yml) runs the automated tests.
+- **12 golden scenarios** exercise agent behavior against a live model through a separate local evaluation harness. Live model evaluations are **not** run by the CI workflow.
+- A quantization-related tool-ordering regression is explicitly recorded as `known_fail` in the [golden scenario file](https://github.com/naveen6gowda/AI-Agent/blob/main/Agent_AI/evals/golden.yaml). This is useful evidence of a limitation, not a claim that every scenario passes.
 
----
+These counts refer to the public source snapshot [51f402d](https://github.com/naveen6gowda/AI-Agent/commit/51f402d796888f901bf359103d35c626c45641d4), reviewed in September 2026. Test presence does not establish universal model reliability or service uptime.
 
-## 🔒 The approval gate (the heart of v5)
+## Local inference and data boundaries
 
-v3's wiring was `agent → tools`. v5 inserts a `policy` node that pauses the whole
-graph the instant a destructive tool is requested:
+The homelab has used Ollama, llama.cpp, and LM Studio. Local inference can keep model processing on owned hardware, while Telegram, Alexa, weather APIs, and optional cloud providers introduce external dependencies. Privacy, latency, and cost depend on the selected provider, enabled integrations, hardware, and workload.
 
-```mermaid
-flowchart TD
-    S([START]) --> A["🧠 agent · LLM reasons"]
-    A -->|tools_condition| Q{wants tools?}
-    Q -->|no| E([END · answer])
-    Q -->|yes| P["🛡️ policy node"]
-    P --> D{destructive?}
-    D -->|"no · safe batch"| G["⚙️ gated_tool_node"]
-    D -->|"yes · interrupt()"| H["🙋 Approve / Deny on Telegram"]
-    H -->|"resume(decisions)"| G
-    G -->|"approved → run<br/>denied → 'REFUSED' message"| A
-```
+## Evolution and reproduction
 
-A denial isn't an exception — it's a synthetic `ToolMessage` fed back to the
-model saying *"REFUSED by operator."* On its next turn the model reasons about
-the refusal instead of blindly retrying. The read-only **voice** path reuses the
-exact same graph, just with an approval function that always denies — so it's
-*physically incapable* of a destructive action, with no separate "read-only mode."
+The [legacy implementations](https://github.com/naveen6gowda/AI-Agent/tree/main/Agent_AI/legacy) preserve the progression from a raw tool loop to LangChain, explicit LangGraph wiring, tracing, and the approval-gated design. They show how the architecture evolved.
 
-### Defense in depth — a destructive action must survive all 8 layers
-
-| # | Layer | Mechanism |
-|:--:|---|---|
-| 0 | Catalog policy | `restart_policy: never` ⇒ the tool is never even proposed |
-| 1 | System-prompt rules | "check status before restarting"; distrust ballooned VM memory |
-| 2 | Read-before-write | must call `check_*` before any destructive tool |
-| 3 | `policy_node` gate | `interrupt()` — the hard, code-level stop |
-| 4 | Human approval | my physical tap, per action; default-deny |
-| 5 | `gated_tool_node` | denied id ⇒ tool never runs |
-| 6 | Audit trail | every ask + execution logged to `audit.log` *and* the chat |
-| 7 | Auth boundaries | bot allow-list · scoped Proxmox token · voice read-only |
-| 8 | Blast-radius limits | loop bound · tools return dicts not exceptions · token caps |
-
----
-
-## 📐 The roadmap — planned in the open, then shipped
-
-[`docs/ARCHITECTURE.md` ↗](https://github.com/naveen6gowda/AI-Agent/blob/main/Agent_AI/docs/ARCHITECTURE.md)
-started as an honest review of the architecture (including what was wrong with
-it) and a phased roadmap. **Every phase is now in production:**
-
-| Phase | Shipped |
-|---|---|
-| 🧰 One tool registry | [`registry.py` ↗](https://github.com/naveen6gowda/AI-Agent/blob/main/Agent_AI/registry.py) — 29 tools declared once; agent, MCP server, and policy gate share one source of truth |
-| 🌐 `sentinel-mcp` MCP server | [`mcp_server.py` ↗](https://github.com/naveen6gowda/AI-Agent/blob/main/Agent_AI/mcp_server.py) — streamable HTTP + bearer auth, **server-side approval enforcement** |
-| 🧪 Evaluation harness | [`evals/` ↗](https://github.com/naveen6gowda/AI-Agent/tree/main/Agent_AI/evals) — 12 golden scenarios; already caught a quantization regression (`known_fail`) |
-| ✅ Tests + CI | [`tests/` ↗](https://github.com/naveen6gowda/AI-Agent/tree/main/Agent_AI/tests) — 40+ pytest tests on GitHub Actions |
-| 🔒 Sanitizing public mirror | Private repo → scrub + secret scan → public mirror; caught a real `.env.bak` pre-publish |
-| 🛡️ Resilience | LLM fallback chain + memory-before-prune (history → RAG before retention deletes it) |
-
----
-
-## 🛠️ Tech stack
-
-`Python 3.14` · `LangGraph` · `LangChain` · **MCP (streamable HTTP)** ·
-**local LLM via LM Studio** (OpenAI-compatible, runtime model switching) ·
-**Langfuse** (self-hosted) · `FastAPI` · `Pydantic v2` · SQLite checkpointer ·
-`pytest` + GitHub Actions CI · `systemd` · Proxmox API · Home Assistant API ·
-Portainer · Telegram Bot API · Firefly III · BM25 RAG
-
----
-
-<div align="center">
-
-**The complete project — every file, the diagrams above in context, and a
-full teaching guide:**
-
-### → [github.com/naveen6gowda/AI-Agent ↗](https://github.com/naveen6gowda/AI-Agent)
-
-</div>
+For installation, environment variables, service credentials, and test commands, use the [implementation README](https://github.com/naveen6gowda/AI-Agent/blob/main/Agent_AI/README.md) and [project configuration](https://github.com/naveen6gowda/AI-Agent/blob/main/Agent_AI/pyproject.toml). Running the integration requires your own infrastructure endpoints and credentials; nothing in this Portfolio folder deploys the agent.

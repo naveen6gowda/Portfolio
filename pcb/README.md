@@ -1,41 +1,29 @@
-# PCB Design Projects
+[← Portfolio](../README.md) · [Related ESPHome firmware](../esphome/README.md)
 
-All PCBs designed in **KiCad**. Source files (.kicad_pcb, .kicad_sch, .kicad_pro) will be added to their respective subfolders.
+# PCB design — compute carrier and connected relay
 
----
+**KiCad design work connecting embedded software, interfaces, and power considerations.**
 
-## CM5 Minima
+This directory contains design notes. Schematics, board layouts, BOMs, Gerbers, fabrication records, and validation reports are not published here. The descriptions distinguish intended features from verified hardware results.
 
-A compact carrier board for the **Raspberry Pi Compute Module 5 (CM5)**.
+## Compute Module 5 carrier adaptation
 
-> **Note:** This design is based on an existing open-source CM5 Minima carrier board from GitHub — not designed from scratch. The key modification was adding a **Zigbee/Thread module (ESP32-C6-MINI-1)** for wireless connectivity.
+I adapted an existing open-source CM5 carrier design toward a smaller board with the interfaces needed for a home-automation / edge-compute use case. My contribution is the adaptation, not authorship of the original reference design.
 
-**Design Goals:**
-- Smaller footprint than the official CM5 IO Board
-- Essential peripherals only: USB, HDMI, GPIO header, power input
-- Industrial power input range (suitable for DIN rail PSU)
-- Compatible with CM5 Lite (no eMMC) and CM5 variants
-- **Added:** ESP32-C6-MINI-1 Zigbee/Thread module for local wireless protocol support
+Design considerations included the CM5 interface, power input, USB, HDMI, GPIO access, board size, and expansion options. An ESP32-C6 companion was considered for wireless and IoT integration. These are design goals rather than a validated product specification.
 
-**Target Use Case:**
-Integration into custom enclosures for embedded Linux applications — media players, home automation controllers, edge AI devices.
+The upstream project and its exact revision are not yet identified in this public write-up; the attribution needs completing before any derived CAD files are distributed. No accelerator performance, manufacturing readiness, or DRC result is claimed without the corresponding design evidence.
 
----
+## ESP32-C6 relay board
 
-## Relay Controller Board
+A two-channel relay-board design intended to integrate with Home Assistant through ESPHome and MQTT. The design work covers relay control, input/output separation, power conversion, and firmware integration.
 
-A custom **2-channel relay controller** PCB built around an **ESP32-C6-MINI-1 module**, designed to replace consumer smart plugs with a reliable, repairable, open-source alternative.
+The documented power concept uses an AC-to-5 V module. **The ESP32-C6-MINI-1 module requires a regulated 3.0–3.6 V supply**; a 5 V output must not feed its supply directly. See [Espressif's module datasheet](https://documentation.espressif.com/esp32-c6-mini-1_mini-1u_datasheet_en.html).
 
-**Design Features:**
-- 2× relay channels (mains-rated, 10A)
-- Optocoupler isolation between ESP32-C6 logic and relay coils
-- Onboard HLK-PM01 (mains to 5V) — ESP32-C6-MINI-1 module used directly (no external LDO required)
-- Status LED per relay channel
-- Screw terminals for wire connections
-- ESP32-C6-MINI-1 programmable via USB-C
+Relay contact ratings, mains spacing, protection, enclosure, and isolation require assessment against the actual schematic, PCB, components, and intended load. This portfolio does not establish mains safety or product certification.
 
-**Firmware:** ESPHome (see [`../esphome/`](../esphome/)) — integrates directly with Home Assistant for relay control via MQTT.
+## Skills demonstrated by the design work
 
----
+KiCad schematic and layout work · embedded interfaces · power-domain planning · ESP32 integration · hardware/firmware coordination
 
-*KiCad project files (.kicad_pcb, schematic, BOM, Gerbers) coming soon.*
+For inspectable implementation files, start with the [published ESPHome configurations](../esphome/README.md).

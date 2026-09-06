@@ -188,7 +188,7 @@ display:
       // Temperature - label and value on same line with different fonts
       if (id(bme_temp).has_state()) {
         it.printf(0, 18, id(font_small), "Temp:");
-        it.printf(28, 16, id(font_medium), "%.1fÂ°C", id(bme_temp).state);
+        it.printf(28, 16, id(font_medium), "%.1f°C", id(bme_temp).state);
       }
 
       // Date display next to temperature and above rectangle (DD/MM/YYYY format)
@@ -243,7 +243,7 @@ display:
       
       // Outside temperature
       if (id(outside_temp).has_state()) {
-        it.printf(69, 52, id(font_small), "%.1fÂ°C", id(outside_temp).state);
+        it.printf(69, 52, id(font_small), "%.1f°C", id(outside_temp).state);
       }
       
       if (id(outdoor_humidity).has_state()) {

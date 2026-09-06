@@ -1,146 +1,40 @@
-# Local AI on Proxmox LXC — generations 1 & 2 (Ollama → llama.cpp) — historical
+[← AI projects](README.md) · [Infrastructure overview](../homelab/infrastructure.md)
 
-> **Note (July 2026):** this doc covers the first two generations of my local-AI
-> stack. The **current** generation is **LM Studio** on an Apple-silicon node,
-> serving one model (Qwen3.6-35B MoE) through an OpenAI-compatible API to every
-> agent — see the [main README](../README.md#2-ai-homelab-infrastructure). Kept
-> because the migration path and its design decisions are part of the work.
+# Local inference in Proxmox LXC — deployment history
 
-This LXC went through two local-AI stacks:
+This page records the first two generations of my inference setup: Ollama, followed by llama.cpp with Vulkan. The later project configuration moved serving to LM Studio on Apple Silicon. These are historical design notes, not a current installation script.
 
-| Phase | Inference engine | Agent stack |
-|-------|------------------|-------------|
-| **Gen 1** | **Ollama** — easy model management, OpenAI-compatible API on `:11434`, integrates cleanly with Home Assistant and Open WebUI | **OpenClaw** — first local agent stack I ran on top of Ollama |
-| **Gen 2** | **llama.cpp** (Vulkan backend) — direct GGUF inference with full control over quantization, context length, and `llama-server` tuning | **Hermes Agent** v0.13.0 (~35 tools / 88 skills) — migrated from OpenClaw via `hermes claw migrate` |
+## What changed and why
 
-The LXC and iGPU passthrough stayed the same across both migrations — only the engine and agent changed. The Ollama install instructions below are kept as historical reference and because it's still useful as a quick OpenAI-compatible endpoint for the LangChain / LangGraph examples in this folder.
+| Generation | Serving layer | Engineering focus |
+|---|---|---|
+| 1 | Ollama | Simple model management and a local API for applications such as Open WebUI |
+| 2 | llama.cpp with Vulkan | Direct GGUF selection, GPU offload, context limits, and server tuning |
+| 3 | LM Studio on Apple Silicon | Unified-memory capacity and a shared OpenAI-compatible endpoint |
 
-## Why Self-Hosted AI?
+I also operated OpenClaw and later Hermes Agent as third-party agent frameworks. HomelabSentinel is my separate Python / LangGraph implementation. Running a framework and authoring that framework are different contributions.
 
-| Aspect | Cloud API | Self-Hosted (this setup) |
-|--------|-----------|--------------------------|
-| Privacy | Data sent to provider | Stays on local hardware |
-| Cost | Per-token billing | One-time hardware cost |
-| Latency | Network dependent | Sub-100ms local |
-| Availability | Internet required | Works offline |
-| Control | Provider's models | Any model, any time |
+## Historical LXC configuration
 
-## Setup
+The Ubuntu unprivileged container was allocated four CPU cores, 4 GB RAM, and 44 GB disk, with a static address on an infrastructure VLAN. Nesting and keyctl were enabled in the recorded configuration.
 
-### LXC Container Configuration (Proxmox)
-
-```
-CT ID: 101
-OS: Ubuntu
-CPU: 4 cores
-RAM: 4096 MB
-Disk: 44GB (local-lvm)
-Network: VLAN 178, static IP
-Features: nesting=1, keyctl=1 (unprivileged)
-```
-
-### iGPU Passthrough
+The following excerpt shows the device mapping used for the Intel iGPU. Device paths, permissions, and the appropriate container configuration depend on the host; these values are not universal defaults.
 
 ```ini
-# /etc/pve/lxc/101.conf
-lxc.cgroup2.devices.allow: c 226:128 rwm   # renderD128
-lxc.cgroup2.devices.allow: c 226:0 rwm     # card0
+lxc.cgroup2.devices.allow: c 226:128 rwm
+lxc.cgroup2.devices.allow: c 226:0 rwm
 lxc.mount.entry: /dev/dri/renderD128 dev/dri/renderD128 none bind,optional,create=file
 lxc.mount.entry: /dev/dri/card0 dev/dri/card0 none bind,optional,create=file
 ```
 
-This gives whichever inference engine is running (llama.cpp today, Ollama in the earlier setup) access to the integrated GPU for accelerated inference without a discrete GPU.
+For llama.cpp, I explored Vulkan builds using `GGML_VULKAN=ON`, GGUF quantization selection, GPU offload, and context/batch configuration. Supported model architecture and backend compatibility matter; not every GGUF runs on every server version.
 
-### Ollama Installation (inside LXC) — earlier setup
+## Tradeoffs
 
-```bash
-curl -fsSL https://ollama.com/install.sh | sh
-systemctl enable --now ollama
+- Local inference reduces dependence on per-token cloud APIs for the selected workload, but still requires hardware, electricity, and maintenance.
+- Smaller or more heavily quantized models fit constrained memory; tool-use quality needs evaluation after changing quantization.
+- Larger context windows increase memory demand and can affect responsiveness.
+- An OpenAI-compatible endpoint needs a compatible client. The Anthropic learning examples in this repository require a client change to use such an endpoint.
+- Network access, authentication, and firewall configuration remain deployment responsibilities. Local serving alone does not make every connected application private or offline.
 
-# Pull a model
-ollama pull qwen2.5:3b
-ollama pull llama3.2:3b
-
-# Test
-ollama run qwen2.5:3b "Hello, what can you do?"
-```
-
-### llama.cpp Installation (inside LXC) — current setup
-
-Built from source for the same LXC, with the Vulkan backend so it shares the iGPU with Ollama:
-
-```bash
-# Build with Vulkan (iGPU acceleration)
-sudo apt install -y build-essential cmake git libvulkan-dev vulkan-tools
-git clone https://github.com/ggerganov/llama.cpp ~/llama.cpp
-cmake -S ~/llama.cpp -B ~/llama.cpp/build -DGGML_VULKAN=ON
-cmake --build ~/llama.cpp/build --config Release -j
-
-# Pull a GGUF model (any HF GGUF works)
-mkdir -p ~/models && cd ~/models
-huggingface-cli download bartowski/Qwen2.5-3B-Instruct-GGUF \
-    Qwen2.5-3B-Instruct-Q4_K_M.gguf --local-dir .
-
-# Run the OpenAI-compatible server
-~/llama.cpp/build/bin/llama-server \
-    -m ~/models/Qwen2.5-3B-Instruct-Q4_K_M.gguf \
-    --host 0.0.0.0 --port 8080 \
-    -ngl 99 -c 8192
-```
-
-llama.cpp's `llama-server` exposes the same `/v1/chat/completions` shape as Ollama, so any LangChain / LangGraph code in this folder can target it by changing the `base_url`. Why I moved here from Ollama:
-
-- Run a quantization Ollama doesn't ship (e.g. `IQ3_XXS`).
-- Pin a specific GGUF for reproducible benchmarks.
-- Squeeze the iGPU harder with `-ngl 99 --batch-size N --ubatch-size N`.
-- It's the inference layer the **Hermes Agent** sits on top of.
-
-### Hermes Agent on top of llama.cpp — gen-2 agent stack
-
-**Hermes** v0.13.0 replaced **OpenClaw** as my local agent stack on **2026-05-10**. Hermes runs out of `/home/ollama/.hermes/` and ships ~35 tools and ~88 skills against the local `llama-server` endpoint. (Today Hermes points at the same LM Studio-served model as HomelabSentinel.)
-
-```bash
-# Migrating from the earlier OpenClaw setup
-hermes claw migrate          # imports config from ~/.openclaw/
-hermes status                # check engine + tool availability
-hermes run "<instruction>"   # run an agentic instruction
-```
-
-OpenClaw is no longer actively used — keeping it referenced here because the migration path and the design decisions that pushed me from Ollama→llama.cpp and OpenClaw→Hermes are part of the work.
-
-### VS Code Remote Development
-
-```
-# ~/.ssh/config (on laptop)
-Host ollama
-    HostName <ollama-lxc-ip>
-    User ollama
-    IdentityFile ~/.ssh/id_ed25519
-    Port 22
-```
-
-Connect in VS Code → Remote SSH → `ollama` → full IDE inside the LXC container.
-
-## Models Used
-
-| Model | Size | Engine | Use Case |
-|-------|------|--------|----------|
-| Qwen 2.5 3B (Q4_K_M) | ~2.0GB | Ollama / llama.cpp | General assistant, coding help |
-| Llama 3.2 3B | ~2.0GB | Ollama | Fast responses, chat |
-| Qwen 2.5 3B GGUF (custom quant) | ~1.6GB | llama.cpp | Benchmarking, low-RAM tests |
-
-## Integration with Home Assistant
-
-Either engine can be connected to Home Assistant via the OpenAI-compatible API. I switch between them via base URL:
-
-```
-# Ollama (port 11434, model lookup by name)
-Base URL: http://<lxc-ip>:11434/v1
-Model: qwen2.5:3b
-
-# llama.cpp llama-server (port 8080, model fixed at launch)
-Base URL: http://<lxc-ip>:8080/v1
-Model: any (llama-server serves whichever GGUF was loaded with -m)
-```
-
-This enables AI-powered automations, natural language device control, and local voice assistant responses — all processed on-device.
+For maintained installation instructions, use the upstream projects: [Ollama](https://github.com/ollama/ollama), [llama.cpp](https://github.com/ggml-org/llama.cpp), and [LM Studio documentation](https://lmstudio.ai/docs). See the [Sentinel case study](Agent_AI/README.md) for the application built on top of inference.

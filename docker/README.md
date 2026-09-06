@@ -1,93 +1,62 @@
-# Docker Services — Homelab (Debian VM)
+[← Portfolio](../README.md) · [Infrastructure overview](../homelab/infrastructure.md)
 
-Self-hosted service stack running on a Debian VM, managed via Docker Compose. **26 containers**, all running 24/7.
+# Docker service portfolio
 
-## Service Overview
+**A sanitized 24-service Docker Compose reference from a personal Debian VM.**
 
-| Category | Service | Image | Port | Purpose |
-|----------|---------|-------|------|---------|
-| **Management** | Portainer | `portainer-ce` | host | Docker GUI management |
-| **Management** | Watchtower | `watchtower` | — | Auto-update containers (Sat 2am) |
-| **Management** | Dozzle | `dozzle` | 8888 | Real-time Docker log viewer |
-| **Management** | Prunemate | `prunemate` | 7676 | Container image cleanup scheduler |
-| **Dashboard** | Homer | `b4bz/homer` | 3000 | Homelab start page / service index |
-| **Media** | Jellyfin | `linuxserver/jellyfin` | host | Media server — movies & TV |
-| **Photos** | Immich | `immich-server` | 2283 | Self-hosted Google Photos alternative |
-| **Photos** | Immich ML | `immich-machine-learning` | — | Face recognition & CLIP search |
-| **AI / LLM** | Open WebUI | `open-webui` | 3006 | Web UI for Ollama LLM (local + OpenRouter) |
-| **AI / LLM** | Mirofish | `mirofish` | 3010/5001 | AI document & image analysis |
-| **Automation** | n8n | `n8nio/n8n` | 8525 | Visual workflow automation |
-| **Security** | Vaultwarden | `vaultwarden/server` | 9091 | Self-hosted Bitwarden password manager |
-| **Finance** | Firefly III | `fireflyiii/core` | 8212 | Personal finance & budgeting |
-| **Bookmarks** | Linkwarden | `linkwarden` | 3099 | Bookmark manager with full-page archiving |
-| **DNS** | AdGuard Home | `adguardhome` | host | Network-wide DNS ad blocker |
-| **File Sync** | Syncthing | `linuxserver/syncthing` | host | Peer-to-peer file synchronization |
-| **Backup** | Duplicati | `linuxserver/duplicati` | 8200 | Encrypted scheduled backups |
-| **Databases** | PostgreSQL (pgvector) | `ankane/pgvector` | — | n8n database with vector extension |
-| **Databases** | MariaDB | `mariadb:11.4` | — | General-purpose SQL database |
-| **Databases** | Immich Postgres | `immich-app/postgres` | — | Immich with pgvector + pgvectors |
+[docker-compose.yml](docker-compose.yml) shows how I organize service configuration, persistent storage, networks, dependencies, and operational tooling. It is a deployment reference, not a one-command application bundle or a live service inventory.
 
-## Architecture
+## Service map
 
-```
-Debian VM (Docker host)
-│
-├── Homer             ← Start page linking all services
-│
-├── Media Stack
-│   └── Jellyfin      ← Movies/TV (host network for DLNA)
-│
-├── Photo Stack
-│   ├── Immich            ← Photo sync from phone
-│   ├── Immich ML         ← On-device face recognition + CLIP embeddings
-│   ├── Immich Postgres   ← pgvector database
-│   └── Immich Redis      ← Job queue
-│
-├── AI Stack
-│   ├── Open WebUI        ← Connects to Ollama LXC + OpenRouter
-│   └── Mirofish          ← Document/image AI analysis
-│
-├── Automation Stack
-│   ├── n8n               ← Workflow automation (connects to HA, Immich, etc.)
-│   ├── n8n Postgres      ← pgvector DB for n8n
-│   └── n8n Redis         ← n8n job queue
-│
-├── Self-Hosted Apps
-│   ├── Vaultwarden       ← Password manager (Bitwarden-compatible)
-│   ├── Firefly III       ← Personal finance tracking
-│   └── Linkwarden        ← Bookmark archiving + search
-│
-├── Network
-│   └── AdGuard Home      ← DNS server for entire LAN, blocks ads/trackers
-│
-└── Maintenance
-    ├── Syncthing         ← Config/data sync between machines
-    ├── Duplicati         ← Encrypted backups
-    ├── Watchtower        ← Weekly auto-update of all images
-    ├── Dozzle            ← Log monitoring
-    └── Prunemate         ← Scheduled image pruning
-```
+| Area | Services in the Compose file |
+|---|---|
+| Management and logs | Portainer, Watchtower, Dozzle, Prunemate |
+| Dashboard | Homer |
+| Media | Jellyfin |
+| Photos | Immich server, machine learning, Valkey, PostgreSQL |
+| AI interfaces | Open WebUI, Mirofish |
+| Automation | n8n, Redis, PostgreSQL / pgvector |
+| Password storage | Vaultwarden |
+| Finance | Firefly III, MariaDB |
+| Bookmarks and search | Linkwarden, PostgreSQL, Meilisearch |
+| DNS | AdGuard Home |
+| Sync and backup tooling | Syncthing, Duplicati |
 
-## Notable Technical Details
+These are third-party applications I configured and operated. The Compose integration is my portfolio contribution; application authorship remains with the upstream projects.
 
-- **Immich ML** runs on-device face recognition and CLIP semantic image search — no cloud
-- **Open WebUI** connects to local **Ollama** (GPU-accelerated LXC) as primary, with **OpenRouter** as cloud fallback
-- **n8n** automations include Home Assistant webhooks, Immich triggers, and scheduled tasks
-- **Watchtower** sends Discord notifications on successful container updates
-- **AdGuard Home** serves DNS for the entire LAN — blocks trackers at network level
-- **Duplicati** backs up all service data with encryption
+## What the configuration demonstrates
 
-## Usage
+- Persistent bind mounts and named volumes for application data and model caches.
+- Dedicated networking for the n8n stack and Firefly, plus host networking for selected services.
+- Service dependencies, an Immich cache health check, and environment-based secret injection.
+- Logs and management through Dozzle / Portainer, scheduled update configuration with Watchtower, and Duplicati backup tooling.
+- n8n as an automation layer for projects such as AI news briefings and Telegram assistance; private workflow exports are not included.
+
+## Prerequisites and validation
+
+Before adapting this file, provide the application configuration and environment files referenced by it:
+
+| Required local file / resource | Used by |
+|---|---|
+| `.env` | Shared interpolation values, Immich, and the automation database |
+| `mirofish/.env` | Mirofish |
+| `fireflyIII/.env`, `fireflyIII/.db.env` | Firefly and MariaDB |
+| `linkwarden/.env` | Linkwarden, its PostgreSQL database, and Meilisearch |
+| `homer/assets/` | Dashboard configuration and assets |
+| `n8n-ollama-network` | Existing external Docker network referenced by the automation stack |
+
+Review all bind mounts, host ports, user IDs, secrets, application URLs, and image versions for the target machine. Application configuration and data are intentionally not committed. Several images use moving tags, so the file is not a version-locked reproducible deployment.
+
+From this directory, after preparing those files, validate without starting services:
 
 ```bash
-# Start all services
-docker compose up -d
-
-# View logs for a specific service
-docker logs -f n8n
-
-# Update a single service
-docker compose pull openwebui && docker compose up -d openwebui
+docker compose config --quiet
 ```
 
-Create a `.env` file with your secrets (see variable names in `docker-compose.yml`).
+Check dependency readiness and application/database version compatibility against the chosen upstream releases. This portfolio review did not launch services or validate database migrations.
+
+## Access and external dependencies
+
+The snapshot includes Docker socket mounts and host-network services, which require a trusted administrative environment. Open WebUI is configured with authentication disabled for the original private-network setup; enable suitable authentication before making it accessible to other users.
+
+Open WebUI includes an OpenRouter endpoint as well as a local Ollama URL. Together with notification and application integrations, this means the stack is **not entirely offline**. Backup tooling being configured is also distinct from a verified restore test.
